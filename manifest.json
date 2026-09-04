@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "Better Canvas (Rutgers)",
+  "version": "0.1.0",
+  "description": "增强 Rutgers Canvas：主题美化、卡片成绩显示、自定义仪表盘面板、课程公告/私信提醒、期中期末倒计时。",
+  "permissions": ["storage", "downloads"],
+  "host_permissions": [
+    "https://*.instructure.com/*", "https://*.gradescope.com/*",
+    "https://api.anthropic.com/*", "https://api.openai.com/*", "https://generativelanguage.googleapis.com/*",
+    "https://api.deepseek.com/*", "https://api.moonshot.cn/*", "https://dashscope.aliyuncs.com/*",
+    "https://open.bigmodel.cn/*", "https://api.x.ai/*", "https://api.groq.com/*", "https://openrouter.ai/*"
+  ],
+  "optional_host_permissions": ["https://*/*"],
+  "background": { "service_worker": "src/background.js" },
+  "commands": {
+    "bc-ask": {
+      "suggested_key": { "default": "Alt+Shift+A" },
+      "description": "学习助手：用当前选中的文字打开讲解浮窗（后台转发到当前标签页）"
+    }
+  },
+  "action": {
+    "default_title": "Better Canvas 设置",
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.instructure.com/*"],
+      "js": [
+        "src/storage.js",
+        "src/api.js",
+        "src/theme.js",
+        "src/themes.js",
+        "src/grades.js",
+        "src/cardgroups.js",
+        "src/gradescope-sync.js",
+        "src/messages.js",
+        "src/syllabus.js",
+        "src/webreg.js",
+        "src/blocks.js",
+        "src/calendar.js",
+        "src/sidebar-gpa.js",
+        "src/links.js",
+        "src/pagestate.js",
+        "src/assistant.js",
+        "src/docs.js",
+        "src/study.js",
+        "src/settings-ui.js",
+        "src/main.js"
+      ],
+      "css": ["styles/inject.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.gradescope.com/*"],
+      "js": ["src/storage.js", "src/gradescope-scrape.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["styles/inject.css"],
+      "matches": ["https://*.instructure.com/*"]
+    }
+  ]
+}

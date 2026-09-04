@@ -1,0 +1,10 @@
+# 抓下来的 Canvas 页面源码：里面有个人日历订阅令牌等私人信息，不进仓库
+SourceCode.html
+
+# 打包产物 / 临时文件
+*.zip
+*.crx
+*.pem
+.DS_Store
+Thumbs.db
+node_modules/

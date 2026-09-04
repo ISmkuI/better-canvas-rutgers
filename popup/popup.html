@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 260px; margin: 0; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+    .head { background: #cc0033; color: #fff; padding: 12px 14px; font-weight: 700; }
+    .body { padding: 10px 14px; }
+    .row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .row input { width: 18px; height: 18px; }
+    .note { font-size: 12px; color: #888; margin: 10px 0; line-height: 1.5; }
+    button { width: 100%; padding: 8px; border: 1px solid #ddd; background: #f7f7f7; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="head">Better Canvas</div>
+  <div class="body">
+    <div class="row"><span>主题美化</span><input type="checkbox" data-path="theme.enabled"></div>
+    <div class="row"><span>卡片成绩</span><input type="checkbox" data-path="cards.showGrade"></div>
+    <div class="row"><span>自定义面板</span><input type="checkbox" data-path="blocks.enabled"></div>
+    <div class="row"><span>消息铃铛</span><input type="checkbox" data-path="messages.enabled"></div>
+    <p class="note">完整设置（颜色、背景、关键词、期中期末）：在 Canvas 页面点右下角 ⚙ 按钮。</p>
+    <button id="clear">清除数据缓存（重新拉取成绩/消息）</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
