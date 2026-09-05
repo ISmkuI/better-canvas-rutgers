@@ -291,6 +291,11 @@ BC.themes = {
     css += R(`${C}> ${WRAP},${C}> * > ${WRAP},${C}> * > * > ${WRAP}`, { "background-color": "transparent", "background-image": "none" });
     css += R(`${C}.header-bar,${C}.header-bar-outer-container,${C}.item-group-container,${C}.ig-list,${C}.show-content,${C}.user_content`,
              { "background-color": "transparent", "background-image": "none", border: "0", "box-shadow": "none" });
+    // 顶部面包屑栏（课程名 › Assignments › …）在 #content 外面：白底满宽条，一并透明；文字用主题字色
+    css += R(".ic-app-nav-toggle-and-crumbs,#breadcrumbs,.ic-app-crumbs,.ic-app-nav-toggle-and-crumbs *:not(a):not(button):not(svg):not(path)",
+             { "background-color": "transparent", "background-image": "none", border: "0", "box-shadow": "none", color: T.text });
+    css += R("#breadcrumbs a,.ic-app-crumbs a", { color: T.accentLink, "font-family": T.font });
+    css += R("#breadcrumbs li:last-child a,#breadcrumbs li:last-child span", { color: T.text, "font-weight": "700" });
 
     // 表格（InstUI Table / 老式 table / 旧 Files 的 .ef-directory）：外框 = 面板
     css += R(`${C}table${NOT_CAL},${C}[role="table"]${NOT_CAL},${C}.ef-directory,` +
