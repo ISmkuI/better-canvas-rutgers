@@ -79,7 +79,8 @@ src/links.js             右侧栏「常用网站」导航（Rutgers 常用站�
 src/pagestate.js         页面状态：visibilitychange / blur / focus -> html.bc-idle 暂停主题动画，离开太久回到仪表盘时刷新面板
 src/assistant.js         学习助手（双击 / 选中 / 右键 / 快捷键触发、浮窗、截图框选、题库；作答页屏蔽）。全部 UI 在 closed Shadow DOM（#bc-ai-host）里，样式随影子树注入
 src/docs.js              文档文字提取：PDF / PPTX / DOCX / XLSX / 文本（自带最小 zip 读取器）
-src/kaltura.js           Kaltura 讲座视频：嵌入识别、MP4 直链解析、字幕拉取与转文本
+src/kaltura.js           Kaltura 讲座视频：嵌入识别（页面 / iframe 回传 / LTI 中转 / Canvas 媒体）、MP4 直链、字幕
+src/kaltura-frame.js     跑在 *.kaltura.com iframe 里：读播放器配置（entry_id / partner_id / ks）回传主页面
 src/study.js             学习工具抽屉（页面对话 / 闪卡 + 间隔重复 / 练习题自测 / 资料库 + 长文档总结）
 src/background.js        后台 service worker：调各家模型接口 + 截图 + 域名授权
 src/settings-ui.js       设置面板 + 课程页小面板

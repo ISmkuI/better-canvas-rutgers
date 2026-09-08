@@ -179,11 +179,28 @@ BC.study = {
       });
     };
     const scan = async () => {
-      const found = BC.kaltura.findOnPage();
+      S._status("扫描中…");
+      // 四路合并：页面直接可见的嵌入 + Kaltura iframe 里脚本回传 + LTI 中转页解析 + Canvas 自带媒体
+      const [direct, frames, lti, canvas] = await Promise.all([
+        Promise.resolve(BC.kaltura.findOnPage()), BC.kaltura.collectFromFrames(1800), BC.kaltura.scanLtiFrames(), BC.kaltura.scanCanvasMedia()
+      ]);
+      const map = new Map();
+      [...frames, ...lti, ...direct, ...canvas].forEach(v => {   // iframe 回传的带 ks，优先
+        const old = map.get(v.entryId);
+        if (!old) map.set(v.entryId, v); else { old.ks = old.ks || v.ks; old.partnerId = old.partnerId || v.partnerId; old.title = old.title || v.title; }
+      });
+      const found = [...map.values()];
       S._videos = found;
       draw();
+      S._status(found.length ? "" : "没找到视频。点「显示本页 iframe」把地址发给开发者可以排查。");
+      if (!found.length) {
+        const dbg = document.createElement("div"); dbg.className = "bc-study-row";
+        const b = document.createElement("button"); b.type = "button"; b.textContent = "显示本页 iframe";
+        b.onclick = () => { const pre = document.createElement("pre"); pre.className = "bc-study-dbg"; pre.textContent = BC.kaltura.frameList().join("\n") || "（本页没有 iframe）"; dbg.replaceWith(pre); };
+        dbg.appendChild(b); list.appendChild(dbg);
+      }
       // 补标题 / 时长（失败不影响列表）
-      for (const v of found) { try { const e = await BC.kaltura.entry(v); v.name = e.name; v.duration = e.duration; if (!v.partnerId) v.partnerId = e.partnerId; } catch (err) { v.err = err.message; } }
+      for (const v of found) { if (v.type === "canvas") continue; try { const e = await BC.kaltura.entry(v); v.name = e.name; v.duration = e.duration; if (!v.partnerId) v.partnerId = e.partnerId; } catch (err) { v.err = err.message; } }
       draw();
     };
     body.querySelector(".bc-study-vscan").onclick = scan;
@@ -210,6 +227,7 @@ BC.study = {
   async _transcript(v) {
     const S = BC.study;
     if (S._vidText[v.entryId]) return S._vidText[v.entryId];
+    if (v.type === "canvas") throw new Error("Canvas 自带媒体没有字幕接口");
     const caps = await BC.kaltura.captions(v);
     if (!caps.length) throw new Error("这个视频没有字幕 / 转写");
     // 英文优先，其次第一条
@@ -224,7 +242,7 @@ BC.study = {
     const S = BC.study;
     try {
       say("解析直链…");
-      const d = await BC.kaltura.resolveDownload(v);
+      const d = v.type === "canvas" ? { url: v.sources[0].url, size: +v.sources[0].size || 0 } : await BC.kaltura.resolveDownload(v);
       const safe = s => String(s || "").replace(/[\\/:*?"<>|]+/g, "_").trim();
       const filename = ["Better Canvas", safe(BC.util.courseTitle(c.course) || ("course " + (c.cid || ""))), "视频", safe((v.title || v.name || v.entryId).slice(0, 80)) + ".mp4"].join("/");
       const r = await chrome.runtime.sendMessage({ type: "bc-download", url: d.url, filename });

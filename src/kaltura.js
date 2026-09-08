@@ -40,6 +40,68 @@ BC.kaltura = {
     return [...out.values()];
   },
 
+  /* ---------- 三路补充识别 ---------- */
+  // 1) 问 Kaltura 域的 iframe 要配置（kaltura-frame.js 会回 postMessage），等 waitMs
+  collectFromFrames(waitMs) {
+    return new Promise(resolve => {
+      const got = new Map();
+      const onMsg = ev => {
+        const d = ev.data;
+        if (!d || d.bcKaltura !== "info" || !d.entryId) return;
+        if (!got.has(d.entryId)) got.set(d.entryId, { url: d.url || "", entryId: d.entryId, partnerId: d.partnerId || "", uiconf: "", ks: d.ks || "", host: BC.kaltura.DEFAULT_HOST, title: d.title || "", src: "frame" });
+      };
+      window.addEventListener("message", onMsg);
+      document.querySelectorAll("iframe").forEach(f => { try { f.contentWindow.postMessage({ bcKaltura: "ping" }, "*"); } catch (e) {} });
+      setTimeout(() => { window.removeEventListener("message", onMsg); resolve([...got.values()]); }, waitMs || 1500);
+    });
+  },
+
+  // 2) LTI 中转 iframe（src 是 instructure 的 external_tools 页面，里面是一个自动提交到 kaltura 的表单）：后台抓 HTML 找 kaltura 地址 / entry id
+  async scanLtiFrames() {
+    const out = [];
+    const frames = [...document.querySelectorAll("iframe[src]")].map(f => f.getAttribute("src")).filter(s => /external_tools|lti|retrieve/i.test(s || ""));
+    for (const src of frames.slice(0, 12)) {
+      try {
+        const abs = new URL(src, location.href).href;
+        const r = await BC.kaltura._fetch(abs, { as: "text" });
+        const html = r.body || "";
+        const urls = html.match(/https?:\/\/[^"'\s<>]*kaltura[^"'\s<>]*/gi) || [];
+        let found = null;
+        for (const u of urls) { const p = BC.kaltura.parse(u.replace(/&amp;/g, "&")); if (p) { found = p; break; } }
+        if (!found) {
+          const eid = (html.match(/([01]_[a-z0-9]{8})/) || [])[1];
+          if (eid) found = { url: abs, entryId: eid, partnerId: (html.match(/(\d{4,9})\.kaf\.kaltura\.com/) || html.match(/partner_?id["'=:\s/]+(\d+)/i) || [])[1] || "", uiconf: "", ks: "", host: BC.kaltura.DEFAULT_HOST };
+        }
+        if (found) { found.title = found.title || (html.match(/<title>([^<]*)<\/title>/i) || [])[1] || ""; found.src = "lti"; out.push(found); }
+      } catch (e) {}
+    }
+    return out;
+  },
+
+  // 3) Canvas 自带媒体嵌入（media_objects_iframe / media_attachments_iframe）：Canvas 接口直接给 MP4 源
+  async scanCanvasMedia() {
+    const out = [];
+    const frames = [...document.querySelectorAll("iframe[src*='media_objects_iframe'],iframe[src*='media_attachments_iframe'],iframe[src*='/media_objects/']")];
+    for (const f of frames) {
+      const src = f.getAttribute("src") || "";
+      const mo = /media_objects(?:_iframe)?\/(m-[A-Za-z0-9]+)/.exec(src);
+      const ma = /media_attachments_iframe\/(\d+)/.exec(src);
+      try {
+        let j = null, id = "";
+        if (mo) { id = mo[1]; j = await BC.api.get(`/api/v1/media_objects/${id}`); }
+        else if (ma) { id = "att-" + ma[1]; j = await BC.api.get(`/media_attachments/${ma[1]}/info`); }
+        if (!j) continue;
+        const sources = (j.media_sources || []).filter(s => /mp4/i.test(s.content_type || s.url || "")).sort((a, b) => (+b.bitrate || 0) - (+a.bitrate || 0));
+        if (!sources.length) continue;
+        out.push({ type: "canvas", entryId: id, name: j.title || j.user_entered_title || f.getAttribute("title") || id, title: f.getAttribute("title") || "", duration: 0, sources, src: "canvas" });
+      } catch (e) {}
+    }
+    return out;
+  },
+
+  // 调试：本页所有 iframe 的地址（识别不到时给用户看）
+  frameList() { return [...document.querySelectorAll("iframe")].map(f => (f.getAttribute("src") || (f.srcdoc ? "[srcdoc]" : "[无 src]")).slice(0, 200)); },
+
   /* ---------- 后台代理请求 ---------- */
   async _fetch(url, opts) {
     let r;

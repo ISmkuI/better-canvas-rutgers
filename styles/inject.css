@@ -270,6 +270,7 @@ html.bc-idle *, html.bc-idle *::before, html.bc-idle *::after { animation-play-s
 .bc-study-vurl { flex: 1; min-width: 0; border: 1px solid #ccc; border-radius: 8px; padding: 4px 8px; font-size: 12px; }
 .bc-study-vname { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bc-study-hint { font-size: 11px; color: #999; margin-top: 8px; line-height: 1.5; }
+.bc-study-dbg { font-size: 10px; white-space: pre-wrap; word-break: break-all; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 6px; max-height: 200px; overflow: auto; user-select: all; }
 .bc-study-folder { font-size: 11px; font-weight: 800; color: #666; margin: 10px 0 4px; }
 .bc-study-file { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed #eee; }
 .bc-study-ficon { flex: 0 0 auto; font-size: 16px; }

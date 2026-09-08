@@ -53,6 +53,12 @@
       "run_at": "document_idle"
     },
     {
+      "matches": ["https://*.kaltura.com/*"],
+      "all_frames": true,
+      "js": ["src/kaltura-frame.js"],
+      "run_at": "document_idle"
+    },
+    {
       "matches": ["https://*.gradescope.com/*"],
       "js": ["src/storage.js", "src/gradescope-scrape.js"],
       "run_at": "document_idle"
