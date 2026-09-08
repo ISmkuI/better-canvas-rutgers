@@ -267,6 +267,9 @@ html.bc-idle *, html.bc-idle *::before, html.bc-idle *::after { animation-play-s
 .bc-study-mat-label { font-size: 12px; font-weight: 700; color: #555; }
 .bc-study-mat-sel { flex: 1; min-width: 0; max-width: 100%; }
 .bc-study-mat label { font-size: 11px; color: #666; display: inline-flex; align-items: center; gap: 3px; }
+.bc-study-vurl { flex: 1; min-width: 0; border: 1px solid #ccc; border-radius: 8px; padding: 4px 8px; font-size: 12px; }
+.bc-study-vname { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-study-hint { font-size: 11px; color: #999; margin-top: 8px; line-height: 1.5; }
 .bc-study-folder { font-size: 11px; font-weight: 800; color: #666; margin: 10px 0 4px; }
 .bc-study-file { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed #eee; }
 .bc-study-ficon { flex: 0 0 auto; font-size: 16px; }

@@ -87,6 +87,7 @@ BC.study = {
          <button data-tab="cards">🃏 闪卡</button>
          <button data-tab="quiz">📝 练习</button>
          <button data-tab="files">📁 资料</button>
+         <button data-tab="videos">🎬 视频</button>
          <button data-tab="bank" title="打开题库">📚 题库</button>
        </div>
        <div class="bc-study-body"></div>
@@ -116,7 +117,121 @@ BC.study = {
     d.querySelectorAll(".bc-study-tabs button").forEach(b => b.classList.toggle("bc-study-active", b.dataset.tab === S._tab));
     const body = d.querySelector(".bc-study-body");
     body.innerHTML = "";
-    ({ chat: S._tabChat, cards: S._tabCards, quiz: S._tabQuiz, files: S._tabFiles }[S._tab] || S._tabChat)(body);
+    ({ chat: S._tabChat, cards: S._tabCards, quiz: S._tabQuiz, files: S._tabFiles, videos: S._tabVideos }[S._tab] || S._tabChat)(body);
+  },
+
+  /* ---------- 5) 讲座视频（Kaltura）：直链下载 + 字幕转写 + 总结 ---------- */
+  _videos: null,
+  _vidText: {},        // entryId -> 字幕纯文本
+  _fmtDur(sec) { sec = Math.round(sec || 0); return sec ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : ""; },
+
+  async _tabVideos(body) {
+    const S = BC.study;
+    const esc = BC.util.esc;
+    const c = await S.ctx();
+    body.innerHTML =
+      `<div class="bc-study-row">
+         <button type="button" class="bc-study-vscan">🔍 扫描本页视频</button>
+         <button type="button" class="bc-study-vdlall">⬇ 全部下载</button>
+         <span class="bc-study-fcount"></span>
+       </div>
+       <div class="bc-study-row"><input type="text" class="bc-study-vurl" placeholder="或粘贴 MediaSpace / Kaltura 视频链接"><button type="button" class="bc-study-vadd">添加</button></div>
+       <div class="bc-study-vlist"><div class="bc-study-empty">扫描中…</div></div>
+       <div class="bc-study-hint">只能拿到你有权观看且没有 DRM 的视频；拿不到直链时仍可用字幕做转写和总结。</div>`;
+    const list = body.querySelector(".bc-study-vlist");
+    const sums = (S._settings.summaries || []);
+    const draw = () => {
+      const vids = S._videos || [];
+      body.querySelector(".bc-study-fcount").textContent = vids.length ? `${vids.length} 个视频` : "";
+      list.innerHTML = vids.length ? vids.map(v => `
+        <div class="bc-study-file bc-study-video" data-id="${esc(v.entryId)}">
+          <span class="bc-study-ficon">🎬</span>
+          <div class="bc-study-fbody">
+            <b class="bc-study-vname">${esc(v.title || v.name || v.entryId)}</b>
+            <div class="bc-study-fmeta">${v.duration ? S._fmtDur(v.duration) + " · " : ""}${esc(v.entryId)}${sums.some(x => x.fileId === "kaltura:" + v.entryId) ? ' · <span class="bc-study-ok">已总结</span>' : ""}<span class="bc-study-vstat"></span></div>
+          </div>
+          <button type="button" class="bc-study-vdl" title="下载 MP4">⬇</button>
+          <button type="button" class="bc-study-vcc" title="拉取字幕 / 转写">💬</button>
+          <button type="button" class="bc-study-vsum" title="用字幕总结这节课">✨</button>
+        </div>`).join("") : `<div class="bc-study-empty">这个页面没找到 Kaltura 视频。打开有视频的页面再扫描，或粘贴链接。</div>`;
+      list.querySelectorAll(".bc-study-video").forEach(el => {
+        const v = vids.find(x => x.entryId === el.dataset.id);
+        const st = el.querySelector(".bc-study-vstat");
+        const say = t => { st.textContent = t ? " · " + t : ""; };
+        el.querySelector(".bc-study-vdl").onclick = () => S._downloadVideo(v, c, say);
+        el.querySelector(".bc-study-vcc").onclick = async () => {
+          try { say("拉取字幕…"); const text = await S._transcript(v); S._pageText = `【讲座字幕：${v.title || v.name || v.entryId}】\n${text.slice(0, 40000)}`; S._chat = []; say(`字幕 ${text.length} 字，已带到页面对话`); S.open("chat"); }
+          catch (e) { say("失败：" + e.message); }
+        };
+        el.querySelector(".bc-study-vsum").onclick = async () => {
+          const btn = el.querySelector(".bc-study-vsum"); btn.disabled = true;
+          try {
+            say("拉取字幕…"); const text = await S._transcript(v);
+            const name = (v.title || v.name || v.entryId) + "（讲座字幕）";
+            const summary = await S.summarizeText(text, name, t => say(t));
+            const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ts: new Date().toISOString(), cid: c.cid || "", course: c.course, fileId: "kaltura:" + v.entryId, name, url: location.href, chars: text.length, summary };
+            await BC.storage.patch(st => { st.summaries = (st.summaries || []).filter(x => x.fileId !== item.fileId); st.summaries.unshift(item); });
+            S._settings.summaries = [item, ...(S._settings.summaries || []).filter(x => x.fileId !== item.fileId)];
+            say("总结完成，在「📁 资料」的已生成总结里");
+          } catch (e) { say("失败：" + e.message); }
+          btn.disabled = false;
+        };
+      });
+    };
+    const scan = async () => {
+      const found = BC.kaltura.findOnPage();
+      S._videos = found;
+      draw();
+      // 补标题 / 时长（失败不影响列表）
+      for (const v of found) { try { const e = await BC.kaltura.entry(v); v.name = e.name; v.duration = e.duration; if (!v.partnerId) v.partnerId = e.partnerId; } catch (err) { v.err = err.message; } }
+      draw();
+    };
+    body.querySelector(".bc-study-vscan").onclick = scan;
+    body.querySelector(".bc-study-vadd").onclick = () => {
+      const p = BC.kaltura.parse(body.querySelector(".bc-study-vurl").value.trim());
+      if (!p) { S._status("这个链接里没有 entry_id（形如 1_abc12345）", true); return; }
+      S._videos = S._videos || [];
+      if (!S._videos.some(x => x.entryId === p.entryId)) S._videos.push({ ...p, title: "" });
+      body.querySelector(".bc-study-vurl").value = "";
+      draw();
+      BC.kaltura.entry(p).then(e => { const v = S._videos.find(x => x.entryId === p.entryId); if (v) { v.name = e.name; v.duration = e.duration; v.partnerId = v.partnerId || e.partnerId; draw(); } }).catch(() => {});
+    };
+    body.querySelector(".bc-study-vdlall").onclick = async () => {
+      const vids = S._videos || [];
+      if (!vids.length) return;
+      if (!confirm(`下载这 ${vids.length} 个视频？`)) return;
+      let n = 0;
+      for (const v of vids) { if (await S._downloadVideo(v, c, () => {}, true)) n++; S._status(`下载中… ${n} / ${vids.length}`); }
+      S._status(`已发起 ${n} 个下载，看浏览器下载栏`);
+    };
+    if (S._videos && S._videos.length) draw(); else scan();
+  },
+
+  async _transcript(v) {
+    const S = BC.study;
+    if (S._vidText[v.entryId]) return S._vidText[v.entryId];
+    const caps = await BC.kaltura.captions(v);
+    if (!caps.length) throw new Error("这个视频没有字幕 / 转写");
+    // 英文优先，其次第一条
+    const cap = caps.find(x => /^en/i.test(x.lang) || /english/i.test(x.label)) || caps[0];
+    const text = await BC.kaltura.captionText(v, cap);
+    if (text.length < 50) throw new Error("字幕内容为空");
+    S._vidText[v.entryId] = text;
+    return text;
+  },
+
+  async _downloadVideo(v, c, say, quiet) {
+    const S = BC.study;
+    try {
+      say("解析直链…");
+      const d = await BC.kaltura.resolveDownload(v);
+      const safe = s => String(s || "").replace(/[\\/:*?"<>|]+/g, "_").trim();
+      const filename = ["Better Canvas", safe(BC.util.courseTitle(c.course) || ("course " + (c.cid || ""))), "视频", safe((v.title || v.name || v.entryId).slice(0, 80)) + ".mp4"].join("/");
+      const r = await chrome.runtime.sendMessage({ type: "bc-download", url: d.url, filename });
+      if (!r || !r.ok) throw new Error(r && r.error || "下载 API 无响应");
+      say(`已开始下载${d.size ? "（" + S._fmtSize(d.size) + "）" : ""}`);
+      return true;
+    } catch (e) { say("失败：" + e.message); if (!quiet) S._status(e.message, true); return false; }
   },
 
   /* ---------- 4) 资料库：一键获取课程全部文件 + 长文档总结 ---------- */

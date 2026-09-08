@@ -160,6 +160,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch(e => sendResponse({ ok: false, error: e && e.message ? e.message : String(e) }));
     return true;
   }
+  if (msg.type === "bc-fetch") {
+    // 代理跨域请求（Kaltura 讲座视频 / 字幕）：带浏览器 cookie，只放行 kaltura.com 与 instructure.com，避免变成开放代理
+    const okHost = /^https:\/\/([\w-]+\.)*(kaltura\.com|instructure\.com)(\/|$)/i.test(msg.url || "");
+    if (!okHost) { sendResponse({ ok: false, error: "不允许的域名" }); return; }
+    keepAlive((async () => {
+      const r = await fetch(msg.url, { method: msg.method || "GET", credentials: "include", redirect: "follow",
+        headers: msg.as === "probe" ? { Range: "bytes=0-0" } : {} });
+      const out = { ok: true, status: r.status, finalUrl: r.url, contentType: r.headers.get("content-type") || "",
+        contentLength: r.headers.get("content-range") ? (r.headers.get("content-range").split("/")[1] || "") : (r.headers.get("content-length") || "") };
+      if (msg.as === "probe") { try { await r.body?.cancel(); } catch (e) {} return out; }
+      const text = await r.text();
+      if (msg.as === "json") { try { out.body = JSON.parse(text); } catch (e) { out.ok = false; out.error = "接口返回的不是 JSON：" + text.slice(0, 120); } }
+      else out.body = text;
+      if (!r.ok && msg.as !== "probe") { out.ok = false; out.error = `HTTP ${r.status}`; }
+      return out;
+    })()).then(sendResponse).catch(e => sendResponse({ ok: false, error: e && e.message ? e.message : String(e) }));
+    return true;
+  }
   if (msg.type === "bc-download") {
     // 一键下载课程资料：存到 下载/Better Canvas/<课程>/<文件夹>/<文件名>，重名自动加序号
     chrome.downloads.download({ url: msg.url, filename: msg.filename, conflictAction: "uniquify", saveAs: false })
