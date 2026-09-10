@@ -1,0 +1,9 @@
+{
+  "name": "potatocanvas",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Chrome MV3 extension for Rutgers Canvas. No build step for development; `npm run build:store` stages the Chrome Web Store (core) edition.",
+  "scripts": {
+    "build:store": "node scripts/build-store.js"
+  }
+}

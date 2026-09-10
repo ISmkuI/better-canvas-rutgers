@@ -3,8 +3,123 @@
  *   - gpa           当前 GPA 估算
  *   - examCountdown 各门课期中/期末倒计时
  * 注入到 #dashboard 顶部一个固定容器中。 */
+BC.i18n.add({
+  "加载失败": "Failed to load",
+  "已过": "Overdue",
+  "今天": "Today",
+  "明天": "Tomorrow",
+  "{n}天": "{n} days",
+  "今天截止": "Due today",
+  "作业": "Assignment",
+  "📅 本周截止": "📅 Due this week",
+  "本周没有待交作业 🎉": "Nothing due this week 🎉",
+  "🎯 当前 GPA（估算）": "🎯 GPA estimate",
+  "基于 {n} 门在读课程 · 分数线因课而异，仅供参考": "Based on {n} active courses · cutoffs vary by course, for reference only",
+  "本周内": "This week",
+  "两周内": "Within 2 weeks",
+  "一个月内": "Within a month",
+  "更远": "Later",
+  "期中": "Midterm",
+  "期末": "Final",
+  "考试": "Exam",
+  "其他": "Other",
+  "课程 {id}": "Course {id}",
+  "（未命名）": "(untitled)",
+  "还有 {n} 条…": "{n} more…",
+  "收起": "Collapse",
+  "暂无": "None",
+  "⏳ 期中/期末倒计时": "⏳ Exam countdown",
+  "扫描所有课程 Syllabus 自动识别": "Scan every course syllabus to detect exam dates",
+  "扫描 Syllabus": "Scan syllabus",
+  "右键条目可编辑": "Right-click an item to edit",
+  "暂无日期。点击右上“扫描 Syllabus”自动识别，或在设置里手动添加。": "No dates yet. Click \"Scan syllabi\" at the top right to detect them, or add them manually in Settings.",
+  "扫描中…": "Scanning…",
+  "识别到 {n} 条": "{n} found",
+  "私信": "Message",
+  "公告": "Announcement",
+  "共 {n} 条": "{n} total",
+  "近 {n} 天无通知": "No notices in the last {n} days",
+  "🧑‍🏫 教授请假": "🧑‍🏫 Professor absence",
+  "{n} 门有通知": "{n} with notices",
+  "全部正常": "All clear",
+  "没有找到在读课程。": "No active courses found.",
+  "📨 最新消息": "📨 Latest messages",
+  "{n} 未读": "{n} unread",
+  "无未读": "No unread",
+  "只显示当前学期课程的消息，可在设置「面板」里关": "Only showing messages from current-term courses; turn this off under Settings › Panels",
+  "这门课最近没有公告或私信。": "No recent announcements or messages for this course.",
+  "最近 {n} 天没有公告或私信。": "No announcements or messages in the last {n} days.",
+  "最新在前": "Newest first",
+  "最早在前": "Oldest first",
+  "未读优先": "Unread first",
+  "重要优先": "Important first",
+  "按课程": "By course",
+  "排序方式": "Sort order",
+  "全部课程": "All courses",
+  "只看某一门课的消息": "Course filter",
+  "{n} 节": "{n} classes",
+  "进行中": "In progress",
+  "下一节": "Next",
+  "全天": "All day",
+  "还没有导入课表": "No schedule imported yet",
+  "打开": "Open",
+  "浏览器「打印」→ 目标选「另存为 PDF」": "Browser \"Print\" → set the destination to \"Save as PDF\"",
+  "点下面按钮选择那个 PDF": "Click the button below and pick that PDF",
+  "📄 导入 WebReg 课表 PDF": "📄 Import WebReg schedule PDF",
+  "📆 今日课程": "📆 Today's classes",
+  "从 WebReg 课表 PDF 导入 / 重新导入每周课表": "Import / re-import the weekly schedule from a WebReg schedule PDF",
+  "重新导入": "Re-import",
+  "导入课表": "Import schedule",
+  "今天没有课 🎉": "No classes today 🎉",
+  "课表来自 WebReg 导入 + Canvas 日历事件；可在设置「面板」里补手填的课。": "Schedule comes from the WebReg import + Canvas calendar events; add classes by hand under Settings › Panels.",
+  "编辑考试": "Edit exam",
+  "名字": "Name",
+  "例：Exam 1": "e.g. Exam 1",
+  "时间": "Date",
+  "类型": "Type",
+  "删除": "Delete",
+  "取消": "Cancel",
+  "保存": "Save",
+  "删除这条考试日期？": "Delete this exam date?",
+  "{a}–{b} 学年": "{a}–{b} academic year",
+  "未分类学期": "Unsorted terms",
+  "📚 历史课程": "📚 Past courses",
+  "没有找到课程。": "No courses found."
+});
+
 BC.blocks = {
   CONTAINER_ID: "bc-blocks",
+
+  // 有限并发的 map：list 里的项最多同时跑 limit 个 fn，结果按原顺序返回（单项失败记为 undefined，不打断其他项）
+  async _pmap(list, limit, fn) {
+    const items = [...list];
+    const out = new Array(items.length);
+    let next = 0;
+    const worker = async () => {
+      while (next < items.length) {
+        const i = next++;
+        try { out[i] = await fn(items[i], i); }
+        catch (e) { out[i] = undefined; console.warn("[BC] pmap item " + i, e); }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+    return out;
+  },
+
+  // 加载骨架：几条宽度不一的闪烁条（宽度类 w40/w60/w75/w90 循环），面板出现时先占位，数据回来后整块 innerHTML 覆盖
+  _skel(lines) {
+    const ws = ["w60", "w90", "w75", "w40"];
+    const rows = Array.from({ length: lines }, (_, i) => `<div class="bc-skel-line ${ws[i % ws.length]}"></div>`).join("");
+    return `<div class="bc-skel" aria-busy="true" aria-hidden="true">${rows}</div>`;
+  },
+  // 倒计时面板是整行的：两行、每行四个短药丸
+  _skelPills(rows, per) {
+    const r = Array.from({ length: rows }, () =>
+      `<div class="bc-skel-row">${Array.from({ length: per }, () => `<div class="bc-skel-line bc-skel-pill"></div>`).join("")}</div>`).join("");
+    return `<div class="bc-skel" aria-busy="true" aria-hidden="true">${r}</div>`;
+  },
+  // 各面板的骨架行数（没列出的用 3 行）
+  SKEL_LINES: { dueThisWeek: 4, gpa: 3, absence: 4, latest: 4, today: 3, history: 3 },
 
   // Rutgers 风格的百分比 -> GPA 估算（不同教授分数线不同，仅作参考）
   pctToGpa(p) {
@@ -73,10 +188,10 @@ BC.blocks = {
       const card = document.createElement("div");
       card.className = "bc-block";
       card.dataset.block = key;
-      card.innerHTML = `<div class="bc-block-body">加载中…</div>`;
+      card.innerHTML = `<div class="bc-block-body">${key === "examCountdown" ? BC.blocks._skelPills(2, 4) : BC.blocks._skel(BC.blocks.SKEL_LINES[key] || 3)}</div>`;
       cont.appendChild(card);
       renderers[key](card, settings).catch(e => {
-        card.querySelector(".bc-block-body").textContent = "加载失败";
+        card.querySelector(".bc-block-body").textContent = BC.t("加载失败");
         console.warn("[BC] block " + key, e);
       });
     }
@@ -95,11 +210,11 @@ BC.blocks = {
     card.className = "bc-block bc-sb-history";
     card.id = BC.blocks.SIDEBAR_HISTORY_ID;
     card.dataset.block = "history";
-    card.innerHTML = `<div class="bc-block-body">加载中…</div>`;
+    card.innerHTML = `<div class="bc-block-body">${BC.blocks._skel(3)}</div>`;
     if (old) old.remove();
     side.appendChild(card);   // 右侧栏最下面
     try { await BC.blocks._history(card); }
-    catch (e) { card.querySelector(".bc-block-body").textContent = "加载失败"; console.warn("[BC] sidebar history", e); }
+    catch (e) { card.querySelector(".bc-block-body").textContent = BC.t("加载失败"); console.warn("[BC] sidebar history", e); }
   },
 
   async _dueThisWeek(card, settings) {
@@ -116,17 +231,21 @@ BC.blocks = {
     }).sort((a, b) => new Date(a.plannable_date) - new Date(b.plannable_date));
 
     const rows = due.slice(0, 12).map(it => {
-      const d = BC.util.daysUntil(it.plannable_date);
-      const urgent = d != null && d <= 2;
-      return `<li class="${urgent ? "bc-urgent" : ""}">
-        <a href="${BC.util.esc(it.html_url || "#")}">${BC.util.esc(it.plannable && it.plannable.title || "作业")}</a>
-        <span class="bc-when">${BC.util.fmtDate(it.plannable_date)}${d != null ? ` · ${d <= 0 ? "今天" : d + "天"}` : ""}</span>
+      const d = BC.util.daysUntil(it.plannable_date);   // 日历日：同一天的中午 / 深夜截止都算同一天
+      // 临期分级高亮：今天 / 已过 = 红，明天 = 橙，两天内 = 黄
+      const tier = d == null ? "" : d <= 0 ? "bc-due-today" : d === 1 ? "bc-due-soon" : d <= 2 ? "bc-due-near" : "";
+      const urgent = d != null && d <= 1;
+      const when = d == null ? "" : d < 0 ? BC.t("已过") : d === 0 ? BC.t("今天") : d === 1 ? BC.t("明天") : BC.t("{n}天", { n: d });
+      return `<li class="${urgent ? "bc-urgent " : ""}${tier}">
+        ${d != null && d <= 0 ? `<span class="bc-due-flag" title="${BC.t("今天截止")}">⚠</span>` : ""}
+        <a href="${BC.util.esc(it.html_url || "#")}">${BC.util.esc(it.plannable && it.plannable.title || BC.t("作业"))}</a>
+        <span class="bc-when" title="${BC.util.esc(it.plannable_date)}">${BC.util.fmtDateTime(it.plannable_date)}${when ? ` · ${when}` : ""}</span>
       </li>`;
     }).join("");
 
     card.innerHTML =
-      `<div class="bc-block-title">📅 本周截止 <span class="bc-pill">${due.length}</span></div>
-       <div class="bc-block-body">${due.length ? `<ul class="bc-list">${rows}</ul>` : "本周没有待交作业 🎉"}</div>`;
+      `<div class="bc-block-title">${BC.t("📅 本周截止")} <span class="bc-pill">${due.length}</span></div>
+       <div class="bc-block-body">${due.length ? `<ul class="bc-list">${rows}</ul>` : BC.t("本周没有待交作业 🎉")}</div>`;
   },
 
   async _gpa(card, settings) {
@@ -139,13 +258,13 @@ BC.blocks = {
     const detail = counted
       .filter(s => s.score != null)
       .map(s => `${s.score}%${s.grade ? " (" + s.grade + ")" : ""}`)
-      .slice(0, 8).join("、");
+      .slice(0, 8).join(BC.i18n.pick("、", ", "));
 
     card.innerHTML =
-      `<div class="bc-block-title">🎯 当前 GPA（估算）</div>
+      `<div class="bc-block-title">${BC.t("🎯 当前 GPA（估算）")}</div>
        <div class="bc-block-body">
          <div class="bc-gpa-num">${avg != null ? avg.toFixed(2) : "—"}</div>
-         <div class="bc-gpa-sub">基于 ${gpas.length} 门在读课程 · 分数线因课而异，仅供参考</div>
+         <div class="bc-gpa-sub">${BC.t("基于 {n} 门在读课程 · 分数线因课而异，仅供参考", { n: gpas.length })}</div>
          <div class="bc-gpa-detail">${BC.util.esc(detail)}</div>
        </div>`;
   },
@@ -154,7 +273,7 @@ BC.blocks = {
   // 全部选偏深的色，既能做白底上的文字（日历条目），也能做白字的底（面板标签）。
   COURSE_PALETTE: ["#c92a2a", "#1864ab", "#2b7a3b", "#b35c00", "#6741d9", "#0b7285", "#c2255c", "#3b5bdb", "#862e9c", "#087f5b"],
 
-  // 时间大类（按剩余天数上限划分，顺序即横向摆放顺序）
+  // 时间大类（按剩余天数上限划分，顺序即横向摆放顺序）；label 是中文键，渲染时过 BC.t
   EXAM_GROUPS: [
     { key: "week",  label: "本周内",   max: 7 },
     { key: "two",   label: "两周内",   max: 14 },
@@ -191,7 +310,7 @@ BC.blocks = {
     const course = {};
     cids.forEach(cid => {
       const s = scores[cid] || {};
-      const t = BC.util.courseTitle(s.name || s.code || ("课程 " + cid));
+      const t = BC.util.courseTitle(s.name || s.code || BC.t("课程 {id}", { id: cid }));
       course[cid] = { color: colors[cid], code: t, name: t };
     });
 
@@ -209,10 +328,10 @@ BC.blocks = {
       return `<li class="bc-exam-item${urgent ? " bc-urgent" : ""}" style="--bc-cc:${c.color}" data-cid="${esc(e.cid)}" data-idx="${e.idx}">
         <div class="bc-exam-item-hd">
           <span class="bc-exam-course-tag" title="${esc(c.name)}">${esc(c.code)}</span>
-          <span class="bc-exam-type">${typeLabel[e.type] || "考试"}</span>
-          <span class="bc-exam-days">${e.days <= 0 ? "今天" : e.days + "天"}</span>
+          <span class="bc-exam-type">${BC.t(typeLabel[e.type] || "考试")}</span>
+          <span class="bc-exam-days">${e.days <= 0 ? BC.t("今天") : BC.t("{n}天", { n: e.days })}</span>
         </div>
-        <a class="bc-exam-item-title" href="/courses/${e.cid}" title="${esc(e.title || "")}">${esc(e.title || "（未命名）")}</a>
+        <a class="bc-exam-item-title" href="/courses/${e.cid}" title="${esc(e.title || "")}">${esc(e.title || BC.t("（未命名）"))}</a>
         <span class="bc-when">${BC.util.fmtDate(e.date)}</span>
       </li>`;
     };
@@ -221,10 +340,10 @@ BC.blocks = {
     const groupsHtml = buckets.map(g => {
       const lis = g.items.map((e, i) => item(e).replace('class="bc-exam-item', `class="bc-exam-item${i >= PER_GROUP ? " bc-exam-hidden" : ""}`)).join("");
       const more = g.items.length > PER_GROUP
-        ? `<button class="bc-exam-more" type="button">还有 ${g.items.length - PER_GROUP} 条…</button>` : "";
+        ? `<button class="bc-exam-more" type="button">${BC.t("还有 {n} 条…", { n: g.items.length - PER_GROUP })}</button>` : "";
       return `<div class="bc-exam-group bc-exam-group-${g.key}${g.items.length ? "" : " bc-exam-group-empty"}">
-        <div class="bc-exam-group-hd">${g.label} <span class="bc-pill">${g.items.length}</span></div>
-        ${g.items.length ? `<ul class="bc-exam-items">${lis}</ul>${more}` : `<div class="bc-exam-none">暂无</div>`}
+        <div class="bc-exam-group-hd">${BC.t(g.label)} <span class="bc-pill">${g.items.length}</span></div>
+        ${g.items.length ? `<ul class="bc-exam-items">${lis}</ul>${more}` : `<div class="bc-exam-none">${BC.t("暂无")}</div>`}
       </div>`;
     }).join("");
 
@@ -235,12 +354,12 @@ BC.blocks = {
     }).join("");
 
     card.innerHTML =
-      `<div class="bc-block-title">⏳ 期中/期末倒计时
-         <button class="bc-scan-btn" title="扫描所有课程 Syllabus 自动识别">扫描 Syllabus</button>
+      `<div class="bc-block-title">${BC.t("⏳ 期中/期末倒计时")}
+         <button class="bc-scan-btn" title="${BC.t("扫描所有课程 Syllabus 自动识别")}">${BC.t("扫描 Syllabus")}</button>
        </div>
        <div class="bc-block-body">${all.length
-          ? `<div class="bc-exam-legend">${legend}<span class="bc-exam-hint">右键条目可编辑</span></div><div class="bc-exam-groups">${groupsHtml}</div>`
-          : "暂无日期。点击右上“扫描 Syllabus”自动识别，或在设置里手动添加。"}</div>`;
+          ? `<div class="bc-exam-legend">${legend}<span class="bc-exam-hint">${BC.t("右键条目可编辑")}</span></div><div class="bc-exam-groups">${groupsHtml}</div>`
+          : BC.t("暂无日期。点击右上“扫描 Syllabus”自动识别，或在设置里手动添加。")}</div>`;
 
     // 右键条目 -> 编辑名字 / 时间 / 类型
     card.querySelectorAll(".bc-exam-item").forEach(li => {
@@ -258,11 +377,11 @@ BC.blocks = {
           // 向下再展开一批
           [...hidden].slice(0, PER_GROUP).forEach(li => li.classList.remove("bc-exam-hidden"));
           const left = hidden.length - Math.min(PER_GROUP, hidden.length);
-          btn.textContent = left > 0 ? `还有 ${left} 条…` : "收起";
+          btn.textContent = left > 0 ? BC.t("还有 {n} 条…", { n: left }) : BC.t("收起");
         } else {
           // 已全部展开：折回默认条数
           group.querySelectorAll(".bc-exam-item").forEach((li, i) => { if (i >= PER_GROUP) li.classList.add("bc-exam-hidden"); });
-          btn.textContent = `还有 ${group.querySelectorAll(".bc-exam-item").length - PER_GROUP} 条…`;
+          btn.textContent = BC.t("还有 {n} 条…", { n: group.querySelectorAll(".bc-exam-item").length - PER_GROUP });
           group.scrollIntoView({ block: "nearest" });
         }
       });
@@ -270,9 +389,9 @@ BC.blocks = {
 
     card.querySelector(".bc-scan-btn").addEventListener("click", async (ev) => {
       const btn = ev.target;
-      btn.disabled = true; btn.textContent = "扫描中…";
+      btn.disabled = true; btn.textContent = BC.t("扫描中…");
       const found = await BC.blocks.scanAllSyllabi();
-      btn.textContent = `识别到 ${found} 条`;
+      btn.textContent = BC.t("识别到 {n} 条", { n: found });
       setTimeout(() => BC.bus.refreshBlocks(), 800);
     });
   },
@@ -281,9 +400,11 @@ BC.blocks = {
    * 关键词在 settings.absenceWords，可在设置面板里改。 */
   async _absence(card, settings) {
     const esc = BC.util.esc;
-    const scores = await BC.grades.fetchScores();
-    let byCourse = {};
-    try { byCourse = await BC.messages.fetchAll(settings); } catch (e) {}
+    // 成绩表和消息并行拉（消息内部也要课程 id，走 fetchScores 的 in-flight 去重）
+    const [scores, byCourse] = await Promise.all([
+      BC.grades.fetchScores(),
+      BC.messages.fetchAll(settings).catch(() => ({}))
+    ]);
     const words = (settings.absenceWords || BC.DEFAULTS.absenceWords || []).map(w => w.toLowerCase()).filter(Boolean);
     const hit = m => {
       const t = `${m.title || ""} ${m.body || ""}`.toLowerCase();
@@ -292,7 +413,7 @@ BC.blocks = {
 
     const rows = Object.entries(scores).map(([cid, s]) => {
       const msgs = (byCourse[cid] || []).filter(hit);   // fetchAll 已按时间倒序
-      return { cid, name: BC.util.courseTitle(s.name || s.code || ("课程 " + cid)), code: s.code || "", msgs };
+      return { cid, name: BC.util.courseTitle(s.name || s.code || BC.t("课程 {id}", { id: cid })), code: s.code || "", msgs };
     }).sort((a, b) => (b.msgs.length - a.msgs.length) || a.name.localeCompare(b.name));
 
     const lookback = settings.messages.lookbackDays || 21;
@@ -300,9 +421,9 @@ BC.blocks = {
       const bad = r.msgs.length > 0;
       const m = r.msgs[0];
       const sub = bad
-        ? `<a class="bc-abs-msg" href="${esc(m.url || "#")}" title="${esc(m.body || "")}">${m.kind === "inbox" ? "私信" : "公告"} · ${esc(m.title)}</a>
-           <span class="bc-when">${BC.util.fmtDate(m.date)}${r.msgs.length > 1 ? ` · 共 ${r.msgs.length} 条` : ""}</span>`
-        : `<span class="bc-abs-sub">近 ${lookback} 天无通知</span>`;
+        ? `<a class="bc-abs-msg" href="${esc(m.url || "#")}" title="${esc(m.body || "")}">${m.kind === "inbox" ? BC.t("私信") : BC.t("公告")} · ${esc(m.title)}</a>
+           <span class="bc-when">${BC.util.fmtDate(m.date)}${r.msgs.length > 1 ? ` · ${BC.t("共 {n} 条", { n: r.msgs.length })}` : ""}</span>`
+        : `<span class="bc-abs-sub">${BC.t("近 {n} 天无通知", { n: lookback })}</span>`;
       return `<li class="bc-abs-row ${bad ? "bc-abs-bad" : "bc-abs-ok"}">
         <span class="bc-abs-mark">${bad ? "✕" : "✔"}</span>
         <div class="bc-abs-body">
@@ -314,10 +435,10 @@ BC.blocks = {
 
     const badCount = rows.filter(r => r.msgs.length).length;
     card.innerHTML =
-      `<div class="bc-block-title">🧑‍🏫 教授请假
-         <span class="bc-pill ${badCount ? "bc-pill-bad" : ""}">${badCount ? badCount + " 门有通知" : "全部正常"}</span>
+      `<div class="bc-block-title">${BC.t("🧑‍🏫 教授请假")}
+         <span class="bc-pill ${badCount ? "bc-pill-bad" : ""}">${badCount ? BC.t("{n} 门有通知", { n: badCount }) : BC.t("全部正常")}</span>
        </div>
-       <div class="bc-block-body">${rows.length ? `<ul class="bc-list bc-abs-list">${html}</ul>` : "没有找到在读课程。"}</div>`;
+       <div class="bc-block-body">${rows.length ? `<ul class="bc-list bc-abs-list">${html}</ul>` : BC.t("没有找到在读课程。")}</div>`;
   },
 
   /* 最新消息：所有课程的公告 + 私信合并，按时间倒序取前 N 条，左右两栏横向摆放。
@@ -338,28 +459,46 @@ BC.blocks = {
 
   async _latest(card, settings) {
     const esc = BC.util.esc;
-    const scores = await BC.grades.fetchScores();
-    let byCourse = {};
-    try { byCourse = await BC.messages.fetchAll(settings); } catch (e) {}
+    const [scores, byCourse] = await Promise.all([
+      BC.grades.fetchScores(),
+      BC.messages.fetchAll(settings).catch(() => ({}))
+    ]);
     // 只看当前学期：老学期的课（Advising、往年课）以及没有学期的课程不显示
     const term = settings.blocks.latestCurrentTermOnly !== false ? BC.blocks.currentTerm(scores) : "";
     const all = [];
     for (const [cid, list] of Object.entries(byCourse)) {
       const s = scores[cid] || {};
       if (term && (s.term || "") !== term) continue;
-      list.forEach(m => all.push({ ...m, cid, course: BC.util.courseTitle(s.name || s.code || ("课程 " + cid)) }));
+      list.forEach(m => all.push({ ...m, cid, course: BC.util.courseTitle(s.name || s.code || BC.t("课程 {id}", { id: cid })) }));
     }
-    all.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-    const shown = all.slice(0, BC.blocks.LATEST_MAX);
-    const unread = all.filter(m => m.unread).length;
+    // 标题右侧的两个下拉：排序方式 + 只看某一门课，选择存在设置里（blocks.latestSort / blocks.latestCourse）
+    const courses = [...new Map(all.map(m => [m.cid, m.course])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    let pick = settings.blocks.latestCourse || "";
+    if (pick && !courses.some(c => c[0] === pick)) pick = "";           // 选过的课这学期没消息 / 不在了：退回全部
+    const sortMode = settings.blocks.latestSort || "newest";
+    const filtered = pick ? all.filter(m => m.cid === pick) : all;
+    // 解析不了的日期排最后。列表是两列网格、按行流动（见 inject.css grid-auto-flow: row），
+    // 所以阅读顺序就是：第 1 条左上、第 2 条右上、第 3 条第二行左……
+    const ts = m => { const t = Date.parse(m.date || ""); return isNaN(t) ? -Infinity : t; };
+    const byTitle = (a, b) => String(a.title).localeCompare(String(b.title));
+    const cmp = {
+      newest: (a, b) => ts(b) - ts(a) || byTitle(a, b),
+      oldest: (a, b) => ts(a) - ts(b) || byTitle(a, b),
+      unread: (a, b) => (b.unread ? 1 : 0) - (a.unread ? 1 : 0) || ts(b) - ts(a) || byTitle(a, b),
+      course: (a, b) => a.course.localeCompare(b.course) || ts(b) - ts(a) || byTitle(a, b),
+      important: (a, b) => (b.rule ? 1 : 0) - (a.rule ? 1 : 0) || ts(b) - ts(a) || byTitle(a, b)
+    }[sortMode] || ((a, b) => ts(b) - ts(a));
+    filtered.sort(cmp);
+    const shown = filtered.slice(0, BC.blocks.LATEST_MAX);
+    const unread = filtered.filter(m => m.unread).length;
 
     const rows = shown.map(m => {
       const color = m.rule ? m.rule.color : "";
       return `<li class="bc-latest-row${m.unread ? " bc-latest-unread" : ""}" ${color ? `style="--bc-rule:${esc(color)}"` : ""}>
         <div class="bc-latest-hd">
-          <span class="bc-latest-kind">${m.kind === "inbox" ? "私信" : "公告"}</span>
+          <span class="bc-latest-kind">${m.kind === "inbox" ? BC.t("私信") : BC.t("公告")}</span>
           <span class="bc-latest-course" title="${esc(scores[m.cid] && scores[m.cid].name || m.course)}">${esc(m.course)}</span>
-          ${m.rule ? `<span class="bc-latest-rule">${esc(m.rule.label)}</span>` : ""}
+          ${m.rule ? `<span class="bc-latest-rule">${esc(BC.t(m.rule.label))}</span>` : ""}
           <span class="bc-when">${BC.util.fmtDate(m.date)}</span>
         </div>
         <a class="bc-latest-title" href="${esc(m.url || "#")}" title="${esc(m.body || "")}">${esc(m.title)}</a>
@@ -367,17 +506,31 @@ BC.blocks = {
     }).join("");
 
     card.innerHTML =
-      `<div class="bc-block-title">📨 最新消息
-         <span class="bc-pill ${unread ? "bc-pill-bad" : ""}">${unread ? unread + " 未读" : "无未读"}</span>
-         ${term ? `<span class="bc-latest-term" title="只显示当前学期课程的消息，可在设置「面板」里关">${esc(term)}</span>` : ""}
+      `<div class="bc-block-title">${BC.t("📨 最新消息")}
+         <span class="bc-pill ${unread ? "bc-pill-bad" : ""}">${unread ? BC.t("{n} 未读", { n: unread }) : BC.t("无未读")}</span>
+         <span class="bc-latest-ctl">
+           ${term ? `<span class="bc-latest-term" title="${BC.t("只显示当前学期课程的消息，可在设置「面板」里关")}">${esc(term)}</span>` : ""}
+         </span>
        </div>
        <div class="bc-block-body">${shown.length ? `<ul class="bc-list bc-latest-list">${rows}</ul>`
-          : `最近 ${settings.messages.lookbackDays || 21} 天没有公告或私信。`}</div>`;
+          : pick ? BC.t("这门课最近没有公告或私信。") : BC.t("最近 {n} 天没有公告或私信。", { n: settings.messages.lookbackDays || 21 })}</div>`;
+
+    // 排序 / 课程下拉：改了就存设置并只重画这一块（消息有缓存，不会重新拉接口）
+    const ctl = card.querySelector(".bc-latest-ctl");
+    const save = async (key, val) => { settings.blocks[key] = val; await BC.storage.set(settings); BC.blocks._latest(card, settings); };
+    const sortSel = BC.ui.select(sortMode, [
+      ["newest", BC.t("最新在前")], ["oldest", BC.t("最早在前")], ["unread", BC.t("未读优先")], ["important", BC.t("重要优先")], ["course", BC.t("按课程")]
+    ], v => save("latestSort", v));
+    sortSel.title = BC.t("排序方式");
+    const courseSel = BC.ui.select(pick, [["", BC.t("全部课程")], ...courses.map(([cid, name]) => [cid, name])], v => save("latestCourse", v));
+    courseSel.title = BC.t("只看某一门课的消息");
+    ctl.append(sortSel, courseSel);
   },
 
   /* 今日课程表：两个来源合并 —— 设置里手填的每周课表（settings.schedule）+ Canvas 日历里今天的课程事件。
    * 按开始时间排序；正在上的标「进行中」，下一节标「下一节」，已结束的变淡。 */
   WEEKDAY: ["日", "一", "二", "三", "四", "五", "六"],
+  WEEKDAY_EN: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
   async _today(card, settings) {
     const esc = BC.util.esc;
     const now = new Date();
@@ -386,7 +539,7 @@ BC.blocks = {
     const toMin = t => { const m = /^(\d{1,2}):(\d{2})/.exec(t || ""); return m ? (+m[1]) * 60 + (+m[2]) : null; };
     const scores = await BC.grades.fetchScores();
     const title = BC.util.courseTitle;
-    const nameOf = cid => { const s = scores[cid] || {}; return title(s.name || s.code || ("课程 " + cid)); };
+    const nameOf = cid => { const s = scores[cid] || {}; return title(s.name || s.code || BC.t("课程 {id}", { id: cid })); };
 
     const items = [];
     // 1) 手填 / WebReg 导入的课表
@@ -431,9 +584,9 @@ BC.blocks = {
       if (s != null && e != null && nowMin >= s && nowMin < e) st = "now";
       else if (e != null && nowMin >= e) st = "past";
       else if (s != null && nowMin < s && !nextMarked) { st = "next"; nextMarked = true; }
-      const tag = st === "now" ? `<span class="bc-today-tag bc-today-tag-now">进行中</span>`
-                : st === "next" ? `<span class="bc-today-tag bc-today-tag-next">下一节</span>` : "";
-      const time = it.allDay ? "全天" : it.start ? `${esc(it.start)}${it.end ? "–" + esc(it.end) : ""}` : "—";
+      const tag = st === "now" ? `<span class="bc-today-tag bc-today-tag-now">${BC.t("进行中")}</span>`
+                : st === "next" ? `<span class="bc-today-tag bc-today-tag-next">${BC.t("下一节")}</span>` : "";
+      const time = it.allDay ? BC.t("全天") : it.start ? `${esc(it.start)}${it.end ? "–" + esc(it.end) : ""}` : "—";
       const title = it.url ? `<a href="${esc(it.url)}">${esc(it.name)}</a>` : `<a href="/courses/${esc(it.cid || "")}">${esc(it.name)}</a>`;
       const sub = [it.course && it.course !== it.name ? it.course : "", it.loc].filter(Boolean).join(" · ");
       return `<li class="bc-today-row bc-today-${st || "later"}">
@@ -450,25 +603,25 @@ BC.blocks = {
     const webreg = BC.webreg ? BC.webreg.SCHEDULE_URL : "https://sims.rutgers.edu/webreg/viewSchedule.htm";
     const guide = imported ? "" :
       `<div class="bc-today-import">
-         <div class="bc-today-import-hd">还没有导入课表</div>
+         <div class="bc-today-import-hd">${BC.t("还没有导入课表")}</div>
          <ol class="bc-today-import-steps">
-           <li>打开 <a href="${webreg}" target="_blank" rel="noopener noreferrer">WebReg · View / Print Schedule ↗</a></li>
-           <li>浏览器「打印」→ 目标选「另存为 PDF」</li>
-           <li>点下面按钮选择那个 PDF</li>
+           <li>${BC.t("打开")} <a href="${webreg}" target="_blank" rel="noopener noreferrer">WebReg · View / Print Schedule ↗</a></li>
+           <li>${BC.t("浏览器「打印」→ 目标选「另存为 PDF」")}</li>
+           <li>${BC.t("点下面按钮选择那个 PDF")}</li>
          </ol>
-         <button type="button" class="bc-today-import-btn">📄 导入 WebReg 课表 PDF</button>
+         <button type="button" class="bc-today-import-btn">${BC.t("📄 导入 WebReg 课表 PDF")}</button>
          <div class="bc-today-import-status"></div>
        </div>`;
 
     card.innerHTML =
-      `<div class="bc-block-title">📆 今日课程
-         <span class="bc-pill">周${BC.blocks.WEEKDAY[wd]} · ${list.length} 节</span>
-         <button class="bc-scan-btn bc-today-reimport" title="从 WebReg 课表 PDF 导入 / 重新导入每周课表">${imported ? "重新导入" : "导入课表"}</button>
+      `<div class="bc-block-title">${BC.t("📆 今日课程")}
+         <span class="bc-pill">${BC.i18n.pick("周" + BC.blocks.WEEKDAY[wd], BC.blocks.WEEKDAY_EN[wd])} · ${BC.t("{n} 节", { n: list.length })}</span>
+         <button class="bc-scan-btn bc-today-reimport" title="${BC.t("从 WebReg 课表 PDF 导入 / 重新导入每周课表")}">${imported ? BC.t("重新导入") : BC.t("导入课表")}</button>
        </div>
        <div class="bc-block-body">
-         ${list.length ? `<ul class="bc-list bc-today-list">${rows}</ul>` : `<div class="bc-today-empty">今天没有课 🎉</div>`}
+         ${list.length ? `<ul class="bc-list bc-today-list">${rows}</ul>` : `<div class="bc-today-empty">${BC.t("今天没有课 🎉")}</div>`}
          ${guide}
-         ${!list.length && imported ? `<div class="bc-today-hint">课表来自 WebReg 导入 + Canvas 日历事件；可在设置「面板」里补手填的课。</div>` : ""}
+         ${!list.length && imported ? `<div class="bc-today-hint">${BC.t("课表来自 WebReg 导入 + Canvas 日历事件；可在设置「面板」里补手填的课。")}</div>` : ""}
        </div>`;
 
     const status = card.querySelector(".bc-today-import-status");
@@ -491,15 +644,15 @@ BC.blocks = {
     box.id = "bc-exam-edit";
     box.className = "bc-exam-edit";
     box.innerHTML =
-      `<div class="bc-exam-edit-hd">编辑考试</div>
-       <label>名字<input type="text" class="bc-ee-title" value="${esc(e.title || "")}" placeholder="例：Exam 1"></label>
-       <label>时间<input type="date" class="bc-ee-date" value="${esc(e.date || "")}"></label>
-       <label>类型<select class="bc-ee-type">${types.map(([v, l]) =>
-         `<option value="${v}"${e.type === v ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+      `<div class="bc-exam-edit-hd">${BC.t("编辑考试")}</div>
+       <label>${BC.t("名字")}<input type="text" class="bc-ee-title" value="${esc(e.title || "")}" placeholder="${BC.t("例：Exam 1")}"></label>
+       <label>${BC.t("时间")}<input type="date" class="bc-ee-date" value="${esc(e.date || "")}"></label>
+       <label>${BC.t("类型")}<select class="bc-ee-type">${types.map(([v, l]) =>
+         `<option value="${v}"${e.type === v ? " selected" : ""}>${BC.t(l)}</option>`).join("")}</select></label>
        <div class="bc-exam-edit-btns">
-         <button type="button" class="bc-del bc-ee-del">删除</button>
-         <button type="button" class="bc-ee-cancel">取消</button>
-         <button type="button" class="bc-ee-save">保存</button>
+         <button type="button" class="bc-del bc-ee-del">${BC.t("删除")}</button>
+         <button type="button" class="bc-ee-cancel">${BC.t("取消")}</button>
+         <button type="button" class="bc-ee-save">${BC.t("保存")}</button>
        </div>`;
     document.body.appendChild(box);
 
@@ -538,7 +691,7 @@ BC.blocks = {
     box.querySelector(".bc-ee-save").onclick = save;
     box.querySelector(".bc-ee-cancel").onclick = close;
     box.querySelector(".bc-ee-del").onclick = async () => {
-      if (!confirm("删除这条考试日期？")) return;
+      if (!confirm(BC.t("删除这条考试日期？"))) return;
       await BC.storage.patch(st => { (st.examDates[cid] || []).splice(idx, 1); });
       close();
       BC.bus.refreshBlocks();
@@ -572,10 +725,10 @@ BC.blocks = {
       const tn = (c.term && c.term.name) || "";
       const p = BC.blocks.parseTerm(tn);
       const ayKey = p ? String(p.ayStart) : "_none";
-      const ayLabel = p ? `${p.ayStart}–${p.ayStart + 1} 学年` : "未分类学期";
+      const ayLabel = p ? BC.t("{a}–{b} 学年", { a: p.ayStart, b: p.ayStart + 1 }) : BC.t("未分类学期");
       const ayStart = p ? p.ayStart : -1;
       const semKey = tn || "_other";
-      const semLabel = tn || "其他";
+      const semLabel = tn || BC.t("其他");
       const semOrder = p ? p.order : 99;
       const en = (c.enrollments || []).find(e => e.type === "student") || (c.enrollments || [])[0];
       const score = en ? (en.computed_current_score ?? null) : null;
@@ -583,7 +736,7 @@ BC.blocks = {
       ays[ayKey] = ays[ayKey] || { label: ayLabel, start: ayStart, count: 0, sems: {} };
       const ay = ays[ayKey];
       ay.sems[semKey] = ay.sems[semKey] || { label: semLabel, order: semOrder, courses: [] };
-      ay.sems[semKey].courses.push({ id: c.id, name: BC.util.courseTitle(c.name || c.course_code || ("课程 " + c.id)), score });
+      ay.sems[semKey].courses.push({ id: c.id, name: BC.util.courseTitle(c.name || c.course_code || BC.t("课程 {id}", { id: c.id })), score });
       ay.count++;
     });
 
@@ -605,8 +758,8 @@ BC.blocks = {
     });
 
     card.innerHTML =
-      `<div class="bc-block-title">📚 历史课程 <span class="bc-pill">${courses.length}</span></div>
-       <div class="bc-block-body">${ayList.length ? html : "没有找到课程。"}</div>`;
+      `<div class="bc-block-title">${BC.t("📚 历史课程")} <span class="bc-pill">${courses.length}</span></div>
+       <div class="bc-block-body">${ayList.length ? html : BC.t("没有找到课程。")}</div>`;
   },
 
   // 扫描所有在读课程的 syllabus，把结果合并进 settings.examDates
@@ -614,11 +767,14 @@ BC.blocks = {
     const scores = await BC.grades.fetchScores();
     const ids = Object.keys(scores);
     let count = 0;
-    await BC.storage.patch(async s => {
-      for (const cid of ids) {
-        let items = [];
-        try { items = await BC.syllabus.scanCourse(cid); } catch (e) { continue; }
-        if (!items.length) continue;
+    // 每门课要打 Course Summary + syllabus 正文 +（最多 3 个）PDF 好几个接口，并发上限 3；扫描完再一次性写入设置
+    const scanned = await BC.blocks._pmap(ids, 3, async cid => {
+      try { return await BC.syllabus.scanCourse(cid); } catch (e) { return []; }
+    });
+    await BC.storage.patch(s => {
+      ids.forEach((cid, i) => {
+        const items = scanned[i] || [];
+        if (!items.length) return;
         const existing = s.examDates[cid] || [];
         // 去重：保留手动条目，补充自动条目
         const keys = new Set(existing.map(e => e.type + e.date));
@@ -626,7 +782,7 @@ BC.blocks = {
           if (!keys.has(it.type + it.date)) { existing.push(it); count++; }
         }
         s.examDates[cid] = existing;
-      }
+      });
     });
     return count;
   }

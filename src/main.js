@@ -5,18 +5,25 @@ BC.bus = {
   async refreshAll() {
     BC.bus._settings = await BC.storage.get();
     const s = BC.bus._settings;
+    BC.i18n.setLang(s.ui && s.ui.lang);   // 界面语言（auto = 跟随系统）
     if (BC.pagestate) BC.pagestate.init(); // visibilitychange / blur / focus：离开时暂停动画，回来时按需刷新
     BC.themes.apply(s.theme.preset, s);  // 预设主题/动画（先）
     BC.theme.apply(s);                    // 手动调色覆盖在预设之上（后）
     BC.ui.injectGearButton();
     BC.bus.applySidebarFlags(s);
     if (BC.dash.onDashboard()) {
-      await BC.grades.decorateCards(s);
-      await BC.messages.decorateCards(s);
-      if (BC.groups) BC.groups.apply(s);
-      await BC.blocks.render(s);
-      if (BC.sidebarGpa) await BC.sidebarGpa.render(s);
-      BC.blocks.renderSidebarHistory(s);
+      // 各面板互不依赖，并行拉取；底层 fetchScores / 消息拉取有 in-flight 去重，不会重复请求。
+      // 分组只看卡片 DOM（cardgroups.js 用 textContent 识别科目），不用等成绩回来。
+      if (BC.groups) { try { BC.groups.apply(s); } catch (e) { console.warn("[BC] groups", e); } }
+      const jobs = [
+        ["grades.decorateCards", () => BC.grades.decorateCards(s)],
+        ["messages.decorateCards", () => BC.messages.decorateCards(s)],
+        ["blocks.render", () => BC.blocks.render(s)],
+        ["sidebarGpa.render", () => BC.sidebarGpa ? BC.sidebarGpa.render(s) : null],
+        ["blocks.renderSidebarHistory", () => BC.blocks.renderSidebarHistory(s)]
+      ];
+      const results = await Promise.allSettled(jobs.map(([, fn]) => { try { return Promise.resolve(fn()); } catch (e) { return Promise.reject(e); } }));
+      results.forEach((r, i) => { if (r.status === "rejected") console.warn("[BC] " + jobs[i][0], r.reason); });
     }
     BC.messages.enhanceLists(s);       // 公告/讨论列表页：已读未读强化
     BC.ui.injectCoursePagePanel();
@@ -63,8 +70,9 @@ BC.dash = {
   const start = () => {
     BC.bus.refreshAll();
 
-    // 卡片是 React 异步渲染：观察容器，出现新卡片就补装饰
-    const observer = new MutationObserver(() => {
+    // 卡片是 React 异步渲染：观察容器，出现新卡片就补装饰。
+    // 页面 DOM 变动非常频繁，回调用 150ms 尾部防抖，最多每秒跑几次。
+    const onMutations = () => {
       const s = BC.bus._settings;
       if (!s) return;
       BC.messages.enhanceLists(s); // 列表行可能异步加载
@@ -77,6 +85,11 @@ BC.dash = {
         if (BC.groups) BC.groups.apply(s);
         if (!document.getElementById(BC.blocks.CONTAINER_ID)) BC.blocks.render(s);
       }
+    };
+    let mutTimer = 0;
+    const observer = new MutationObserver(() => {
+      clearTimeout(mutTimer);
+      mutTimer = setTimeout(onMutations, 150);
     });
     observer.observe(document.body, { childList: true, subtree: true });
 

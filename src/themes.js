@@ -1,5 +1,18 @@
 /* 预设主题：配色 / 背景 / 字体 + 动态动画（季节、日出日落、赛博朋克、黑客、马拉松…）
  * 每个预设 = { css?, font?, start?() => cleanup }。start 返回清理函数，stop() 负责移除 DOM。 */
+BC.i18n.add({
+  "无": "None", "关闭预设主题": "Turn off preset themes",
+  "简约": "Minimal", "干净留白 低饱和": "Clean, airy, low saturation",
+  "清新": "Fresh", "薄荷渐变 圆润": "Mint gradient, rounded",
+  "暗夜": "Dark", "真正的深色配色，不反色": "A true dark palette, no color inversion",
+  "黑白": "Mono", "整页灰度 高对比": "Full-page grayscale, high contrast",
+  "春夏秋冬": "Seasons", "随季节飘落的背景": "Falling background that follows the season",
+  "日出日落": "Sunrise & Sunset", "随时间的海岸天空": "Coastal sky that follows the time of day",
+  "像素风": "Pixel", "复古 8-bit": "Retro 8-bit",
+  "赛博朋克": "Cyberpunk", "霓虹 + 随机故障": "Neon + random glitches",
+  "黑客": "Hacker", "黑底绿色字幕雨": "Green code rain on black",
+  "马拉松": "Marathon", "红黄硬边 新粗野主义": "Red & yellow hard edges, neo-brutalist"
+});
 BC.themes = {
   FX_ID: "bc-fx",
   TRAIL_ID: "bc-trail",
@@ -10,7 +23,7 @@ BC.themes = {
     { id: "",          name: "无",       emoji: "🚫", desc: "关闭预设主题" },
     { id: "minimal",   name: "简约",     emoji: "⬜", desc: "干净留白 低饱和" },
     { id: "fresh",     name: "清新",     emoji: "🌿", desc: "薄荷渐变 圆润" },
-    { id: "dark",      name: "暗夜",     emoji: "🌙", desc: "护眼深色模式" },
+    { id: "dark",      name: "暗夜",     emoji: "🌙", desc: "真正的深色配色，不反色" },
     { id: "blackwhite",name: "黑白",     emoji: "🎞️", desc: "整页灰度 高对比" },
     { id: "seasons",   name: "春夏秋冬", emoji: "🍂", desc: "随季节飘落的背景" },
     { id: "timeofday", name: "日出日落", emoji: "🌅", desc: "随时间的海岸天空" },
@@ -559,14 +572,189 @@ BC.themes = {
         .bc-hdr-btn{background:#fff!important;border:0!important;border-radius:999px!important;
           box-shadow:0 4px 12px rgba(20,120,120,.16)!important;color:#0b6b6b!important;}`
     },
-    // dark 用整页 invert 滤镜，白横条会自动被反成深色，不需要打标
+    /* --- 暗夜：真正的深色配色，不用 invert 滤镜 ---
+     * 整页 invert 会把课程色转色相、把渐变 / 内嵌内容 / 头像 / 画布都反过来。这里改成按令牌铺色：
+     * 页底 #121417 / 面板 #1b1f24 / 二级面 #232830 / 线 #2e343c / 字 #e6e8eb / 次要 #9aa3ad / 强调 #ff4d6d（深底上能过对比的罗格斯红）/ 链接 #7fb3ff。
+     * 图片 / 视频 / iframe / canvas 一律不动。日历、各页表格 / 输入框 / 按钮和扩展自身 UI（--bc-ai-*）由共享生成器按 calendar 令牌出样式。 */
     dark: {
-      // 整页 invert 会把 canvas 再反回来，所以这里按最终看到的颜色写：柔和的蓝白光点
+      tagHeader: true,
+      calendar: {
+        text: "#e6e8eb", muted: "#9aa3ad", bg: "#1b1f24", cell: "#1b1f24", cellAlt: "#232830", today: "#2c2129", line: "#2e343c",
+        head: "#232830", headText: "#e6e8eb", radius: "10px", border: "1px solid #2e343c", shadow: "0 2px 10px rgba(0,0,0,.35)",
+        btnBg: "#232830", btnText: "#e6e8eb", btnBorder: "1px solid #2e343c", btnShadow: "none",
+        accent: "#ff4d6d", accentText: "#14090c", accentLink: "#7fb3ff", eventRadius: "6px"
+      },
+      // 柔和的蓝白光点（页面不再反色，画布上看到的就是这些颜色）
       trail: { colors: ["#8ab4f8", "#c7d2fe", "#e0e7ff"], shape: "dot", size: 4, count: 2, life: 550, spread: 6, drift: 0.5, glow: 8, alpha: 0.7 },
       css: `
-        html{background:#fff;filter:invert(.92) hue-rotate(180deg)!important;}
-        img,video,iframe,svg,canvas,.ic-avatar,[style*="background-image"]{filter:invert(1) hue-rotate(180deg)!important;}
-        body.ic-app{background:#fff!important;}`
+        /* ---- 全局：原生控件 / 滚动条走深色；Canvas 品牌变量（左侧全局导航、链接、主色）一并改深 ---- */
+        :root{color-scheme:dark!important;--ic-brand-primary:#ff4d6d!important;--ic-link-color:#7fb3ff!important;--ic-link-color-darkened-10:#9ec5ff!important;
+          --ic-brand-font-color-dark:#e6e8eb!important;--ic-brand-button--primary-bgd:#ff4d6d!important;--ic-brand-button--primary-text:#14090c!important;
+          --ic-brand-button--secondary-bgd:#232830!important;--ic-brand-button--secondary-text:#e6e8eb!important;
+          --ic-brand-global-nav-bgd:#0e1013!important;--ic-brand-global-nav-logo-bgd:#0e1013!important;
+          --ic-brand-global-nav-ic-icon-color:#c9d1d9!important;--ic-brand-global-nav-ic-icon-color-active:#fff!important;
+          --ic-brand-global-nav-menu-item__text-color:#c9d1d9!important;--ic-brand-global-nav-menu-item__text-color--active:#fff!important;
+          --ic-brand-global-nav-avatar-border:#2e343c!important;--ic-brand-global-nav-menu-item__badge-bgd:#ff4d6d!important;--ic-brand-global-nav-menu-item__badge-text:#fff!important;}
+        html,body,body.ic-app,#application,.ic-app{background:#121417!important;background-image:none!important;}
+        body.ic-app{color:#e6e8eb!important;}
+        ::selection{background:rgba(255,77,109,.35);color:#fff;}
+        /* 页面级包裹层全部透明，只有下面明确列出的面板有底色 */
+        #wrapper,#main,.ic-app-main-content,.ic-Layout-wrapper,.ic-Layout-columns,.ic-Layout-contentMain,.ic-Layout-contentWrapper,#content-wrapper,#content,
+        #not_right_side,#right-side-wrapper,#right-side,#left-side,.ic-app-course-menu,.ic-Dashboard-header{background:transparent!important;background-image:none!important;}
+        .ic-Layout-contentMain,.ic-Dashboard-header,.ic-Dashboard-header *,#right-side,#right-side *{color:#e6e8eb!important;}
+        h1,h2,h3,h4,h5,h6{color:#e6e8eb!important;}
+        a:not(.ic-DashboardCard__link):not(.ic-app-header__menu-list-link):not(.btn):not(.Button):not([role="button"]):not([class*="baseButton"]):not(.bc-hdr-btn){color:#7fb3ff!important;}
+        a:not(.ic-DashboardCard__link):not(.ic-app-header__menu-list-link):not(.btn):not(.Button):not([role="button"]):not([class*="baseButton"]):hover{color:#9ec5ff!important;}
+        hr{border-color:#2e343c!important;}
+
+        /* ---- 左侧全局导航 ---- */
+        #header.ic-app-header,#header .ic-app-header__main-navigation,#header .ic-app-header__secondary-navigation,#header .ic-app-header__logomark-container,#mobile-header,.mobile-header{
+          background:#0e1013!important;border-right:1px solid #2e343c!important;}
+        #header .ic-app-header__menu-list-link,#header .ic-app-header__menu-list-link .menu-item__text,#mobile-header *{color:#c9d1d9!important;}
+        #header .ic-icon-svg{fill:currentColor!important;}
+        #header .ic-app-header__menu-list-link:hover,#header .ic-app-header__menu-list-item--active>.ic-app-header__menu-list-link{color:#fff!important;background:#1b1f24!important;}
+        #header .ic-app-header__menu-list-item--active>.ic-app-header__menu-list-link .menu-item__text{color:#fff!important;}
+        #header .menu-item__badge{background:#ff4d6d!important;color:#fff!important;}
+        /* 全局导航弹出的托盘（课程 / 账户 / 帮助）和其它 InstUI 托盘 / 对话框 / 菜单 / 提示 */
+        .navigation-tray-container,.tray-with-space-for-global-nav,[class*="-tray__content"],[class*="-modal__content"],[class*="-popover__content"],
+        [role="dialog"]:not(.ui-dialog),[role="alertdialog"],[role="menu"],[role="listbox"],[role="tooltip"],.ui-menu,.ui-tooltip,.al-options,.ui-datepicker,[class*="-tooltip__"]{
+          background:#1b1f24!important;color:#e6e8eb!important;border-color:#2e343c!important;box-shadow:0 8px 28px rgba(0,0,0,.5)!important;}
+        [class*="-modal__header"],[class*="-modal__footer"],[class*="-tray__content"] h2{background:#232830!important;color:#e6e8eb!important;border-color:#2e343c!important;}
+        [role="dialog"]:not(.ui-dialog) *:not(a):not(button):not(button *):not(input):not(select):not(textarea):not(svg):not(path):not(img):not([class*="ColorPicker"]),
+        [role="menu"] *:not(a):not(svg):not(path),[role="listbox"] *:not(svg):not(path),.ui-menu *,.al-options *,.ui-datepicker *{color:#e6e8eb!important;}
+        [role="menuitem"]:hover,[role="menuitemcheckbox"]:hover,[role="menuitemradio"]:hover,[role="option"]:hover,[role="option"][aria-selected="true"],.ui-menu .ui-state-hover,.ui-menu .ui-state-focus,.al-options li a:hover{
+          background:#232830!important;color:#fff!important;}
+        [role="dialog"] input[type="text"],[role="dialog"] input[type="search"],[role="dialog"] input[type="number"],[role="dialog"] select,[role="dialog"] textarea,
+        [role="dialog"] [class*="textInput__facade"],[role="dialog"] [class*="-select__inputContainer"]{background:#121417!important;color:#e6e8eb!important;border-color:#2e343c!important;}
+        .ui-datepicker .ui-state-default{background:#232830!important;color:#e6e8eb!important;border-color:#2e343c!important;}
+        .ui-datepicker .ui-state-active,.ui-datepicker .ui-state-highlight{background:#ff4d6d!important;color:#14090c!important;}
+        .ui-widget-header{background:#232830!important;color:#e6e8eb!important;border-color:#2e343c!important;background-image:none!important;}
+        .ui-tabs .ui-tabs-nav{background:transparent!important;border-color:#2e343c!important;}
+        .ui-tabs .ui-tabs-nav li a{color:#9aa3ad!important;}
+        .ui-tabs .ui-tabs-nav li.ui-tabs-active a,.ui-tabs .ui-tabs-nav li.ui-state-active a{color:#e6e8eb!important;background:#1b1f24!important;}
+
+        /* ---- 课程导航 + 面包屑 ---- */
+        #section-tabs a,#section-tabs a *,#courseMenuToggle,.ic-app-course-nav-toggle,.ic-app-course-nav-toggle *{color:#c9d1d9!important;}
+        #section-tabs a:hover{background:#1b1f24!important;color:#fff!important;}
+        #section-tabs a.active{background:#1b1f24!important;color:#fff!important;border-color:#2e343c!important;border-left:2px solid #ff4d6d!important;}
+        #section-tabs a.active *{color:#fff!important;}
+        .ic-app-nav-toggle-and-crumbs{border-bottom:1px solid #2e343c!important;}
+
+        /* ---- 仪表盘卡片：底 / 边变深，hero 保留课程色 ---- */
+        .ic-DashboardCard{background:#1b1f24!important;border:1px solid #2e343c!important;border-radius:10px!important;box-shadow:0 2px 10px rgba(0,0,0,.35)!important;color:#e6e8eb!important;}
+        .ic-DashboardCard__header_content,.ic-DashboardCard__header,.ic-DashboardCard__box,.ic-DashboardCard__link,.ic-DashboardCard__action-container{background:#1b1f24!important;}
+        .ic-DashboardCard__header-title,.ic-DashboardCard__header-title *{color:#e6e8eb!important;}
+        .ic-DashboardCard__header-subtitle,.ic-DashboardCard__header-term{color:#9aa3ad!important;}
+        .ic-DashboardCard__action-container{border-top:1px solid #2e343c!important;}
+        .ic-DashboardCard__action,.ic-DashboardCard__action *,.ic-DashboardCard__action-container svg,.ic-DashboardCard__header-button,.ic-DashboardCard__header-button *{color:#9aa3ad!important;fill:#9aa3ad!important;}
+        .ic-DashboardCard__action:hover,.ic-DashboardCard__action:hover *{color:#e6e8eb!important;fill:#e6e8eb!important;}
+        .ic-DashboardCard__action-badge{background:#ff4d6d!important;color:#fff!important;}
+
+        /* ---- 仪表盘标题横条（由共享的 _tagHeader 打标）：Canvas 画的白底满宽条 ---- */
+        .bc-hdr-strip{background:transparent!important;background-image:none!important;box-shadow:none!important;border:0!important;}
+        .bc-hdr-title,.bc-hdr-title *{color:#e6e8eb!important;background:transparent!important;}
+        .bc-hdr-btn,.bc-hdr-btn *{color:#e6e8eb!important;background-color:transparent!important;}
+        .bc-hdr-btn{background-color:#232830!important;border:1px solid #2e343c!important;border-radius:8px!important;box-shadow:none!important;}
+        .bc-hdr-btn svg{fill:#e6e8eb!important;}
+
+        /* ---- 扩展自己的面板 / 列表 ---- */
+        .bc-block{background:#1b1f24!important;color:#e6e8eb!important;border:1px solid #2e343c!important;box-shadow:0 2px 10px rgba(0,0,0,.35)!important;}
+        .bc-block-title,.bc-block-body,.bc-card-group-header,.bc-ay>summary,.bc-sem-title,.bc-exam-group-hd,.bc-exam-item-title,.bc-today-name,.bc-latest-title,.bc-abs-name,.bc-sec-name{color:#e6e8eb!important;}
+        .bc-list li,.bc-abs-list li.bc-abs-row,.bc-latest-list li.bc-latest-row,.bc-today-list li.bc-today-row,.bc-links-group{border-color:#2e343c!important;}
+        .bc-when,.bc-gpa-sub,.bc-msg-date,.bc-exam-hint,.bc-links-hint,.bc-links-ext,.bc-exam-none,.bc-exam-days,.bc-abs-sub,.bc-today-sub,.bc-latest-hd,.bc-sec-sub,.bc-section-title,.bc-links-group>summary{color:#9aa3ad!important;}
+        .bc-gpa-detail{color:#c9d1d9!important;}
+        .bc-gpa-num,.bc-status{color:#7fb3ff!important;}
+        .bc-list li.bc-due-today{background:#3a1a22!important;border-left-color:#ff4d6d!important;}
+        .bc-list li.bc-due-today a,.bc-list li.bc-due-today .bc-when,.bc-list li.bc-urgent .bc-when,.bc-due-flag,.bc-exam-item.bc-urgent .bc-exam-days{color:#ff8fa3!important;}
+        .bc-list li.bc-due-soon{background:#3a2a12!important;border-left-color:#f08c00!important;}
+        .bc-list li.bc-due-soon .bc-when{color:#ffc078!important;}
+        .bc-list li.bc-due-near{background:#33301a!important;border-left-color:#f5c400!important;}
+        .bc-list li.bc-due-near .bc-when{color:#e5d36b!important;}
+        .bc-pill{background:#1f2c44!important;color:#9ec5ff!important;}
+        .bc-pill-bad{background:#3a1a22!important;color:#ff8fa3!important;}
+        .bc-exam-type{background:#2c2440!important;color:#c4b5fd!important;}
+        .bc-exam-group{background:#232830!important;}
+        .bc-exam-item{background:#232830!important;box-shadow:none!important;}
+        .bc-cal-chip{background:#1b1f24!important;}
+        .bc-cal-chip:hover{background:#232830!important;}
+        .bc-links-list li a{color:#e6e8eb!important;}
+        .bc-links-list li a:hover{background:rgba(255,255,255,.06)!important;}
+        .bc-links-editor-list{border-color:#2e343c!important;}
+        .bc-sbg{--bc-ink:#e6e8eb!important;--bc-ink-2:#c9d1d9!important;--bc-ink-mute:#9aa3ad!important;--bc-rule:#2e343c!important;}
+        .bc-scan-btn,.bc-del,.bc-clear,.bc-msg-allread,.bc-order-item button,.bc-today-reimport{background:#232830!important;color:#e6e8eb!important;border-color:#2e343c!important;}
+        .bc-bell{background:#232830!important;color:#e6e8eb!important;}
+        .bc-bell:hover{background:#2e343c!important;}
+        .bc-row-unread,.bc-row-unread.bc-row-important{background:#1f2c44!important;}
+        /* 消息弹窗 */
+        .bc-msg-popup{background:#1b1f24!important;color:#e6e8eb!important;border:1px solid #2e343c!important;}
+        .bc-msg-head,.bc-msg-item{border-color:#2e343c!important;}
+        .bc-msg-count,.bc-msg-empty,.bc-msg-body{color:#9aa3ad!important;}
+        .bc-msg-title{color:#e6e8eb!important;}
+        .bc-msg-item:hover{background:#232830!important;}
+        .bc-msg-item.bc-read{background:#171a1f!important;}
+        .bc-msg-item.bc-read .bc-msg-title{color:#9aa3ad!important;}
+        .bc-msg-item.bc-unread{background:#1f2c44!important;}
+        .bc-msg-item.bc-unread .bc-msg-title{color:#9ec5ff!important;}
+        .bc-msg-kind{background:#2e343c!important;color:#c9d1d9!important;}
+        /* 设置面板 / 考试编辑浮层 / 学习抽屉里的输入 */
+        #bc-panel,.bc-exam-edit{background:#1b1f24!important;color:#e6e8eb!important;border:1px solid #2e343c!important;}
+        .bc-panel-head,.bc-tabs,.bc-row,.bc-order-item{border-color:#2e343c!important;}
+        .bc-panel-close,.bc-tabs button,.bc-row-label small{color:#9aa3ad!important;}
+        .bc-tabs button.bc-tab-active{background:#232830!important;color:#e6e8eb!important;}
+        .bc-row-label,.bc-order-name,.bc-exam-edit-hd{color:#e6e8eb!important;}
+        #bc-panel input,#bc-panel select,#bc-panel textarea,.bc-exam-edit input,.bc-exam-edit select,#bc-study input,#bc-study select,#bc-study textarea,.bc-key-wrap input,.bc-key-wrap select{
+          background:#121417!important;color:#e6e8eb!important;border-color:#2e343c!important;}
+        .bc-note{background:#232830!important;border-color:#2e343c!important;color:#c9d1d9!important;}
+        .bc-theme-card{background:#232830!important;border-color:#2e343c!important;}
+        .bc-theme-card:hover{border-color:#3d4550!important;}
+        .bc-theme-card.bc-sel{background:#1f2c44!important;border-color:#7fb3ff!important;box-shadow:0 0 0 2px rgba(127,179,255,.2)!important;}
+        .bc-theme-name{color:#e6e8eb!important;}
+        .bc-theme-card small{color:#9aa3ad!important;}
+        .bc-study-card{background:#232830!important;border-color:#2e343c!important;}
+
+        /* ---- Canvas 自带的浅底小件：通知条 / 公告 & 讨论列表 / 模块 & 作业行 / 成绩表 / 测验 / 近期动态 ---- */
+        .ic-notification,#announcementWrapper .ic-notification{background:#1b1f24!important;border:1px solid #2e343c!important;box-shadow:none!important;}
+        .ic-notification *{color:#e6e8eb!important;background-color:transparent!important;}
+        .ic-notification a,.ic-notification a *{color:#7fb3ff!important;}
+        .ic-notification__icon{background:#2e343c!important;}
+        .ic-notification--info .ic-notification__icon{background:#2b5aa8!important;}
+        .ic-notification--success .ic-notification__icon{background:#2f7a4a!important;}
+        .ic-notification--alert .ic-notification__icon{background:#8a5a12!important;}
+        .ic-notification--error .ic-notification__icon{background:#8a2a3a!important;}
+        .ic-notification__icon,.ic-notification__icon *{color:#fff!important;fill:#fff!important;}
+        .announcements-v2__wrapper,.discussions-v2__wrapper{background:transparent!important;}
+        #content .ic-item-row,#content .ic-announcement-row,#content .ic-discussion-row{background:#1b1f24!important;border-color:#2e343c!important;color:#e6e8eb!important;}
+        #content .ic-item-row *:not(a):not(button):not(button *):not(svg):not(path):not(img){color:#e6e8eb!important;}
+        #content .ic-item-row:hover{background:#232830!important;}
+        .context_module .ig-header,.ig-row__layout,.ig-row .ig-info,.ig-row .ig-details{background:transparent!important;}
+        .ig-row .ig-type-icon,.ig-row .ig-type-icon *,.ig-row .ig-title{color:#e6e8eb!important;}
+        #grades_summary tr.group_total td,#grades_summary tr.final_grade td{background:#232830!important;color:#e6e8eb!important;font-weight:700;}
+        #grades_summary .assignment_score .grade,#grades_summary .possible,#grades_summary .tooltip_text{color:#e6e8eb!important;}
+        #content .question{background:#1b1f24!important;border-color:#2e343c!important;}
+        #content .question .header,#content .quiz_sortable .header{background:#232830!important;color:#e6e8eb!important;}
+        #content .answers .answer{background:transparent!important;border-color:#2e343c!important;}
+        .recent_activity .stream_header{background:#1b1f24!important;border-color:#2e343c!important;}
+        .recent_activity .details_container,.recent_activity .stream-details{background:#232830!important;color:#e6e8eb!important;}
+        /* 计划表 / 待办（React 版类名带 -styles__ 前缀） */
+        [class*="PlannerApp-styles__"],[class*="Day-styles__"],[class*="EmptyDays-styles__"],[class*="ToDoSidebar-styles__"]{background:transparent!important;color:#e6e8eb!important;}
+        [class*="Grouping-styles__"],[class*="PlannerItem-styles__root"],[class*="MissingAssignments-styles__"]{background:#1b1f24!important;border-color:#2e343c!important;color:#e6e8eb!important;}
+        [class*="PlannerItem-styles__"] *:not(a):not(button):not(button *):not(svg):not(path):not(img),[class*="Day-styles__"] *:not(a):not(svg):not(path){color:#e6e8eb!important;}
+        #right-side .todo-list li,#right-side .to-do-list li,#right-side .events_list li,[class*="ToDoSidebarItem-styles__"]{border-color:#2e343c!important;background:transparent!important;}
+        /* 右栏按钮（Start a New Course / View Calendar 等）：_boxesCss 只管 #content，这里补右栏 */
+        #right-side .btn,#right-side .Button:not(.Button--icon-action),#right-side a.btn,#right-side [class*="baseButton"]{
+          background:#232830!important;background-image:none!important;color:#e6e8eb!important;border:1px solid #2e343c!important;box-shadow:none!important;text-shadow:none!important;}
+        #right-side .btn *,#right-side .Button:not(.Button--icon-action) *{color:#e6e8eb!important;fill:currentColor!important;}
+        #right-side .btn-primary,#right-side .Button--primary{background:#ff4d6d!important;color:#14090c!important;border-color:#ff4d6d!important;}
+        #right-side .btn-primary *,#right-side .Button--primary *{color:#14090c!important;}
+
+        /* ---- 富文本正文：只改字色 / 链接色 / 代码块，图片 / 视频 / iframe 不动。老师用内联颜色写的深色字在深底上看不见，所以字色统一压成浅色；
+         * 带内联底色（荧光标记）的片段反过来用深字，保证可读。 ---- */
+        .user_content,.user_content *:not(a):not(img):not(video):not(iframe):not(canvas):not(svg):not(path):not(button):not(input):not(select):not(textarea):not(code):not(pre){color:#e6e8eb!important;}
+        .user_content [style*="background-color"]:not([style*="transparent"]),.user_content [style*="background-color"]:not([style*="transparent"]) *,.user_content mark{color:#16191d!important;}
+        .user_content a{color:#7fb3ff!important;}
+        .user_content pre,.user_content code{background:#232830!important;color:#e6e8eb!important;border-color:#2e343c!important;}
+        .user_content table td,.user_content table th{border-color:#2e343c!important;}
+        .user_content blockquote{border-left-color:#2e343c!important;color:#c9d1d9!important;}`
     },
     blackwhite: {
       tagHeader: true,
@@ -579,7 +767,9 @@ BC.themes = {
       // 墨点：黑 / 深灰，无光晕
       trail: { colors: ["#111", "#444", "#777"], shape: "dot", size: 4, count: 2, life: 500, spread: 5, drift: 0.5, alpha: 0.75 },
       css: `
-        #application{filter:grayscale(1) contrast(1.04)!important;}
+        /* 滤镜必须挂在 html 上：挂在 #application 上会让它成为 position:fixed 后代的包含块，
+         * 左侧全局导航 #header 随页面一起滚走，只剩一条空黑条（issue #2）；根元素不受此规则影响 */
+        html{filter:grayscale(1) contrast(1.04)!important;}
         body.ic-app{background:#ffffff!important;}
         :root{--ic-brand-primary:#000!important;--ic-link-color:#000!important;}
         .ic-DashboardCard,.bc-block{border:1px solid #111!important;}
@@ -612,7 +802,7 @@ BC.themes = {
         .ic-Layout-contentMain,.ic-Dashboard-header *{color:#f4f4f4!important;}
         a:not(.ic-DashboardCard__link):not(.ic-app-header__menu-list-link):not(.btn):not(.Button){color:#ffcd75!important;}
         a:not(.ic-DashboardCard__link):not(.ic-app-header__menu-list-link):hover{color:#a7f070!important;text-decoration:underline dotted!important;}
-        h1,h2,h3,.bc-block-title,#bc-gear,#bc-study-btn,.bc-panel-head,.bc-pill,.bc-exam-type,.bc-grade-badge,.bc-card-group-header,
+        h1,h2,h3,.bc-block-title,#bc-gear,#bc-study-btn,.bc-panel-head,.bc-pill,.bc-exam-type,.bc-grade-badge,.bc-class-badge,.bc-card-group-header,
         .bc-today-tag,.bc-latest-kind,.bc-abs-mark,.bc-sec-badge,.bc-exam-group-hd,.bc-block-title .bc-scan-btn{
           font-family:'Press Start 2P',monospace!important;}
         h1,h2,h3{font-size:14px!important;line-height:1.6!important;text-shadow:3px 3px 0 #1a1c2c!important;}
@@ -630,6 +820,18 @@ BC.themes = {
         #header .menu-item__badge{background:#ef7d57!important;color:#1a1c2c!important;border:2px solid #1a1c2c!important;border-radius:0!important;
           font-family:'Press Start 2P',monospace!important;font-size:7px!important;}
 
+        /* ---- 内容区底板：夜景画在最底下时，卡片之间的分组标题 / 成绩框会直接压在星星和亮窗上，看不清。
+         *      给主内容列和右侧栏铺一块半透明夜色底板（比 inject.css 里 bc-fx-active 的透明规则更高的特异性），
+         *      画布本身也在 draw() 里压暗了一层，只在页面边缘露出天际线 ---- */
+        html.bc-fx-active body #content,html.bc-fx-active body #right-side{
+          background:rgba(26,28,44,.82)!important;border:4px solid #1a1c2c!important;box-shadow:inset 4px 4px 0 #29366f,8px 8px 0 #0b0c15!important;
+          padding:16px!important;box-sizing:border-box!important;}
+        html.bc-fx-active body #right-side{margin-top:8px!important;}
+        .bc-card-group-header{background:#1a1c2c!important;display:inline-block!important;padding:6px 10px!important;border:3px solid #566c86!important;box-shadow:3px 3px 0 #0b0c15!important;}
+        .ic-DashboardCard.bc-has-side .bc-side{background:#1a1c2c!important;border:4px solid #566c86!important;border-radius:0!important;box-shadow:6px 6px 0 #0b0c15!important;}
+        .bc-side-lbl{color:#94b0c2!important;}
+        .bc-side-val{color:#f4f4f4!important;text-shadow:2px 2px 0 #0b0c15!important;}
+
         /* ---- 像素框：切角 + 描边 + 内斜面 + 硬阴影（卡片 / 面板 / 侧栏卡 / 弹窗 / 设置面板） ---- */
         .ic-DashboardCard,.bc-block,.bc-msg-popup,#bc-panel,.bc-exam-edit,#bc-study,.bc-exam-group,.bc-exam-item,.bc-today-import{
           background:#333c57!important;color:#f4f4f4!important;border:4px solid #1a1c2c!important;border-radius:0!important;
@@ -637,6 +839,9 @@ BC.themes = {
         .ic-DashboardCard{overflow:hidden!important;transition:none!important;}
         .ic-DashboardCard:hover{transform:translate(-2px,-2px)!important;}
         .ic-DashboardCard *,.bc-block *{color:#f4f4f4!important;}
+        .bc-list li.bc-due-today{background:#5d275d!important;border-left-color:#ef7d57!important;}
+        .bc-list li.bc-due-soon{background:#4a3520!important;border-left-color:#ffcd75!important;}
+        .bc-list li.bc-due-near{background:#3a3a1a!important;border-left-color:#a7f070!important;}
         .ic-DashboardCard__header_hero{border-bottom:4px solid #1a1c2c!important;image-rendering:pixelated!important;}
         /* 卡片内区（标题 / 课号 / 学期）是 Canvas 自带的白底，字已刷成浅色，底不跟着变深就是白底白字 */
         .ic-DashboardCard__header_content,.ic-DashboardCard__header,.ic-DashboardCard__box,.ic-DashboardCard__link{background:#333c57!important;}
@@ -653,13 +858,13 @@ BC.themes = {
         .bc-card-group-header{color:#ffcd75!important;font-size:9px!important;line-height:1.8!important;border-bottom:4px solid #1a1c2c!important;text-shadow:2px 2px 0 #1a1c2c!important;}
 
         /* ---- 小标签 / 徽章：方块 + 8px 像素字 ---- */
-        .bc-pill,.bc-exam-type,.bc-today-tag,.bc-latest-kind,.bc-exam-course-tag,.bc-sec-badge,.bc-cal-type,.bc-latest-rule,.bc-abs-mark,.bc-grade-badge,.bc-bell-badge,.bc-msg-kind,.bc-msg-tag,.bc-row-tag{
+        .bc-pill,.bc-exam-type,.bc-today-tag,.bc-latest-kind,.bc-exam-course-tag,.bc-sec-badge,.bc-cal-type,.bc-latest-rule,.bc-abs-mark,.bc-grade-badge,.bc-class-badge,.bc-bell-badge,.bc-msg-kind,.bc-msg-tag,.bc-row-tag{
           border-radius:0!important;font-family:'Press Start 2P',monospace!important;font-size:7px!important;line-height:1.8!important;
           border:2px solid #1a1c2c!important;box-shadow:2px 2px 0 #0b0c15!important;}
         .bc-pill{background:#41a6f6!important;color:#1a1c2c!important;}
         .bc-pill-bad{background:#ef7d57!important;color:#1a1c2c!important;}
         .bc-exam-type{background:#5d275d!important;color:#ffcd75!important;}
-        .bc-grade-badge{background:#1a1c2c!important;color:#a7f070!important;backdrop-filter:none!important;}
+        .bc-grade-badge,.bc-class-badge{background:#1a1c2c!important;color:#a7f070!important;backdrop-filter:none!important;}
         .bc-abs-ok .bc-abs-mark{background:#a7f070!important;color:#1a1c2c!important;border-radius:0!important;}
         .bc-abs-bad .bc-abs-mark{background:#ef7d57!important;color:#1a1c2c!important;border-radius:0!important;}
         .bc-sec-badge{background:#41a6f6!important;color:#1a1c2c!important;}
@@ -732,7 +937,7 @@ BC.themes = {
         const build = () => {
           W = Math.ceil(c.width / S); H = Math.ceil(c.height / S);
           off.width = W; off.height = H;
-          stars = Array.from({ length: Math.round(W * H / 120) }, () => ({ x: (Math.random() * W) | 0, y: (Math.random() * H * 0.7) | 0, p: (Math.random() * 40) | 0, big: Math.random() < 0.12 }));
+          stars = Array.from({ length: Math.round(W * H / 220) }, () => ({ x: (Math.random() * W) | 0, y: (Math.random() * H * 0.7) | 0, p: (Math.random() * 40) | 0, big: Math.random() < 0.12 }));
           clouds = Array.from({ length: Math.max(3, (W / 60) | 0) }, () => ({ x: rnd(-40, W), y: rnd(H * 0.08, H * 0.45), w: (rnd(14, 34)) | 0, v: rnd(0.04, 0.12) }));
           // 天际线：从左到右随机宽高的楼，底部 25% 高度以内
           bld = []; windows = [];
@@ -777,6 +982,8 @@ BC.themes = {
           ctx.imageSmoothingEnabled = false;
           ctx.clearRect(0, 0, c.width, c.height);
           ctx.drawImage(off, 0, 0, W, H, 0, 0, W * S, H * S);
+          // 整体压暗一层：亮窗 / 星星退到内容后面，正文不和它们抢对比度
+          ctx.fillStyle = "rgba(26,28,44,.42)"; ctx.fillRect(0, 0, c.width, c.height);
         };
         raf = requestAnimationFrame(draw);
         return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); window.removeEventListener("resize", c._bcResize); };
@@ -807,7 +1014,15 @@ BC.themes = {
         .ic-DashboardCard,.bc-block{background:#0e0e1f!important;border:1px solid #ff2bd6!important;
           box-shadow:0 0 14px rgba(255,43,214,.35)!important;color:#eaf2ff!important;}
         .ic-DashboardCard *,.bc-block *{color:#eaf2ff!important;}
-        .ic-DashboardCard__header-title,.ic-DashboardCard__header-title *{color:#00e5ff!important;}
+        .bc-list li.bc-due-today{background:#3a1030!important;border-left-color:#ff2bd6!important;}
+        .bc-list li.bc-due-soon{background:#3a2a10!important;border-left-color:#ffb020!important;}
+        .bc-list li.bc-due-near{background:#26261a!important;border-left-color:#00e5ff!important;}
+        /* 卡片内区（标题 / 课号 / 学期）是 Canvas 自带的白底：底不变深就是白底浅字 */
+        .ic-DashboardCard__header_content,.ic-DashboardCard__header,.ic-DashboardCard__box,.ic-DashboardCard__link,.ic-DashboardCard__action-container{background:#0e0e1f!important;}
+        .ic-DashboardCard__header-title,.ic-DashboardCard__header-title *{color:#00e5ff!important;text-shadow:0 0 6px rgba(0,229,255,.35)!important;font-size:15px!important;line-height:1.3!important;}
+        .ic-DashboardCard__header-subtitle,.ic-DashboardCard__header-term{color:#b8c4e6!important;text-shadow:none!important;font-family:'Orbitron',sans-serif!important;font-size:12px!important;}
+        .ic-DashboardCard__action-container{border-top:1px solid #2a2a4a!important;}
+        .ic-DashboardCard__action-container *,.ic-DashboardCard__action-container svg{color:#00e5ff!important;fill:#00e5ff!important;}
 
         /* ---- 白底面板必须一起变深 ----
          * 正文被调成近白的 #eaf2ff 并沿 .ic-Layout-contentMain / body 继承下去，
@@ -908,6 +1123,15 @@ BC.themes = {
         .ic-DashboardCard,.bc-block{background:rgba(0,18,6,.85)!important;border:1px solid #1f8a4c!important;
           box-shadow:0 0 10px rgba(40,200,90,.25)!important;}
         .ic-DashboardCard *,.bc-block *{color:#43d675!important;}
+        /* 卡片内区白底一起变深 */
+        .ic-DashboardCard__header_content,.ic-DashboardCard__header,.ic-DashboardCard__box,.ic-DashboardCard__link,.ic-DashboardCard__action-container{background:#001206!important;}
+        .ic-DashboardCard__header-title,.ic-DashboardCard__header-title *{color:#9bffc0!important;font-size:15px!important;line-height:1.3!important;}
+        .ic-DashboardCard__header-subtitle,.ic-DashboardCard__header-term{color:#43d675!important;opacity:.85!important;font-size:12px!important;}
+        .ic-DashboardCard__action-container{border-top:1px solid #1f8a4c!important;}
+        .ic-DashboardCard__action-container *,.ic-DashboardCard__action-container svg{color:#43d675!important;fill:#43d675!important;}
+        .bc-list li.bc-due-today{background:#2a0a0a!important;border-left-color:#ff4d4d!important;}
+        .bc-list li.bc-due-soon{background:#2a1e05!important;border-left-color:#ffb020!important;}
+        .bc-list li.bc-due-near{background:#0a2a12!important;border-left-color:#43d675!important;}
         /* 同赛博朋克：正文是浅绿，白底面板不一起变深就几乎看不清（绿字白底约 2:1） */
         .ic-notification,#announcementWrapper .ic-notification{
           background:#001206!important;border:1px solid #1f8a4c!important;}
@@ -1315,7 +1539,7 @@ BC.themes = {
         .bc-exam-course-tag{border-radius:0!important;border:1px solid #111!important;}
         .bc-cal-chip{border-radius:0!important;border:1px solid #111!important;border-left-width:3px!important;background:#fff!important;}
         .bc-cal-type{border-radius:0!important;}
-        .bc-grade-badge{background:#cc0033!important;color:#fff!important;
+        .bc-grade-badge,.bc-class-badge{background:#cc0033!important;color:#fff!important;
           border:1px solid #111!important;border-radius:0!important;}
         .bc-bell{background:#fff!important;border:2px solid #111!important;border-radius:0!important;
           box-shadow:2px 2px 0 #111!important;}

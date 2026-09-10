@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Better Canvas (Rutgers)",
-  "version": "0.1.0",
-  "description": "增强 Rutgers Canvas：主题美化、卡片成绩显示、自定义仪表盘面板、课程公告/私信提醒、期中期末倒计时。",
-  "permissions": ["storage", "downloads"],
+  "name": "PotatoCanvas",
+  "version": "0.2.0",
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
+  "permissions": ["storage", "unlimitedStorage", "downloads", "webRequest", "scripting", "webNavigation", "activeTab", "alarms"],
   "host_permissions": [
     "https://*.instructure.com/*", "https://*.gradescope.com/*",
     "https://api.anthropic.com/*", "https://api.openai.com/*", "https://generativelanguage.googleapis.com/*",
@@ -16,23 +18,28 @@
   "commands": {
     "bc-ask": {
       "suggested_key": { "default": "Alt+Shift+A" },
-      "description": "学习助手：用当前选中的文字打开讲解浮窗（后台转发到当前标签页）"
+      "description": "__MSG_cmdAsk__"
     }
   },
   "action": {
-    "default_title": "Better Canvas 设置",
+    "default_title": "__MSG_actionTitle__",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" },
     "default_popup": "popup/popup.html"
   },
   "content_scripts": [
     {
       "matches": ["https://*.instructure.com/*"],
       "js": [
+        "src/i18n.js",
+        "src/gate.js",
         "src/storage.js",
+        "src/knowledge.js",
         "src/api.js",
         "src/theme.js",
         "src/themes.js",
         "src/grades.js",
         "src/cardgroups.js",
+        "src/gradescope-parse.js",
         "src/gradescope-sync.js",
         "src/messages.js",
         "src/syllabus.js",
@@ -47,6 +54,7 @@
         "src/kaltura.js",
         "src/study.js",
         "src/settings-ui.js",
+        "src/tour.js",
         "src/main.js"
       ],
       "css": ["styles/inject.css"],
@@ -55,19 +63,20 @@
     {
       "matches": ["https://*.kaltura.com/*"],
       "all_frames": true,
+      "world": "MAIN",
       "js": ["src/kaltura-frame.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://*.gradescope.com/*"],
-      "js": ["src/storage.js", "src/gradescope-scrape.js"],
+      "js": ["src/i18n.js", "src/storage.js", "src/gradescope-parse.js", "src/gradescope-scrape.js"],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
       "resources": ["styles/inject.css"],
-      "matches": ["https://*.instructure.com/*"]
+      "matches": ["https://*/*", "http://*/*"]
     }
   ]
 }

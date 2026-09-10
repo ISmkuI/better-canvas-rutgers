@@ -5,6 +5,14 @@
  *   - 右侧迷你日历 #minical：给有考试的日期打红点。
  *   - 议程视图是纯列表，暂不注入。
  * FullCalendar 每次翻页 / 切视图都会重建 DOM，所以用 MutationObserver 盯着容器、渲染做成幂等。 */
+BC.i18n.add({
+  "期中": "Midterm",
+  "期末": "Final",
+  "考试": "Exam",
+  "其他": "Other",
+  "课程 {cid}": "Course {cid}",
+  "右键编辑": "Right-click to edit"
+});
 BC.calendar = {
   _obs: null,
   _raf: 0,
@@ -50,7 +58,7 @@ BC.calendar = {
         const s = scores[cid] || {};
         (byDate[e.date] = byDate[e.date] || []).push({
           cid, idx, type: e.type, title: e.title || "", color: colors[cid],
-          course: BC.util.courseTitle(s.name || s.code || ("课程 " + cid))
+          course: BC.util.courseTitle(s.name || s.code || BC.t("课程 {cid}", { cid }))
         });
       });
     }
@@ -68,12 +76,12 @@ BC.calendar = {
 
   _chip(it) {
     const esc = BC.util.esc;
-    const label = BC.calendar.TYPE_LABEL[it.type] || "考试";
+    const label = BC.t(BC.calendar.TYPE_LABEL[it.type] || "考试");
     const a = document.createElement("a");
     a.className = "bc-cal-chip";
     a.href = "/courses/" + it.cid;
     a.style.setProperty("--bc-cc", it.color);
-    a.title = `${it.course}\n${label}${it.title ? " · " + it.title : ""}\n右键编辑`;
+    a.title = `${it.course}\n${label}${it.title ? " · " + it.title : ""}\n${BC.t("右键编辑")}`;
     a.innerHTML = `<span class="bc-cal-type">${label}</span><span class="bc-cal-title">${esc(it.title || it.course)}</span>`;
     a.addEventListener("contextmenu", ev => {
       ev.preventDefault(); ev.stopPropagation();
@@ -123,7 +131,7 @@ BC.calendar = {
       if (td.dataset.bcExams === sig) return;
       td.classList.add("bc-has-exam");
       td.dataset.bcExams = sig;
-      td.title = list.map(it => `${BC.calendar.TYPE_LABEL[it.type] || "考试"} · ${it.course}${it.title ? " · " + it.title : ""}`).join("\n");
+      td.title = list.map(it => `${BC.t(BC.calendar.TYPE_LABEL[it.type] || "考试")} · ${it.course}${it.title ? " · " + it.title : ""}`).join("\n");
     });
   }
 };

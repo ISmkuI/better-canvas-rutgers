@@ -72,6 +72,17 @@ BC.api = {
     );
   },
 
+  // 作业分组 + 每个作业的班级统计（最低 / 最高 / 平均 / 中位数）。老师关掉「显示成绩分布」或有效提交不足 5 份时没有 score_statistics
+  async assignmentGroupsStats(courseId) {
+    return BC.api.getAll(
+      `/api/v1/courses/${courseId}/assignment_groups` +
+      `?include[]=assignments&include[]=submission&include[]=score_statistics&per_page=100`
+    );
+  },
+  async course(courseId) {
+    return BC.api.get(`/api/v1/courses/${courseId}`);
+  },
+
   // 公告（一次请求覆盖多门课）
   async announcements(courseIds, startDateISO) {
     if (!courseIds.length) return [];

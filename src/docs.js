@@ -1,7 +1,14 @@
 /* 文档文字提取（零依赖）：PDF / PPTX / DOCX / XLSX / TXT / MD / CSV / HTML。
  * PPTX、DOCX、XLSX 都是 zip 包里的 XML：这里自带一个最小 zip 读取器（中央目录 + deflate-raw 解压），
- * 然后从 slide / document / sharedStrings 里抠出文本节点。PDF 走 BC.syllabus.extractPdfText。 */
+ * 然后从 slide / document / sharedStrings 里抠出文本节点。PDF 走 BC.syllabus.extractPdfText。
+ * 错误信息走界面语言（BC.t）；抽出的文本里的分页标签（"--- 第 n 页 ---"、"[备注]"）会进知识库 / 交给模型，按回答语言选。 */
+BC.i18n.add({
+  "不是 zip 文件": "Not a zip file", "docx 里没有 document.xml": "No document.xml inside the docx", "不支持的文件类型": "Unsupported file type",
+  "老版 .ppt/.doc/.xls 是二进制格式，暂不支持；请老师提供 pptx/docx 或先转成 PDF": "Legacy .ppt/.doc/.xls are binary formats and are not supported; ask for pptx/docx or convert to PDF first"
+});
 BC.docs = {
+  // 抽出文本里的标签用的语言：回答语言（设置里的回答语言，auto = 界面语言）
+  _en() { return (BC.assistant && BC.assistant._replyLang ? BC.assistant._replyLang() : BC.i18n.lang) === "en"; },
   kindOf(name, ct) {
     const n = (name || "").toLowerCase();
     if (/\.pdf$/.test(n) || /pdf/i.test(ct || "")) return "pdf";
@@ -24,7 +31,7 @@ BC.docs = {
     for (let i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) {
       if (u8[i] === 0x50 && u8[i + 1] === 0x4b && u8[i + 2] === 0x05 && u8[i + 3] === 0x06) { eocd = i; break; }
     }
-    if (eocd < 0) throw new Error("不是 zip 文件");
+    if (eocd < 0) throw new Error(BC.t("不是 zip 文件"));
     const count = dv.getUint16(eocd + 10, true);
     let p = dv.getUint32(eocd + 16, true);
     const out = {};
@@ -71,20 +78,21 @@ BC.docs = {
     const slides = Object.keys(files).filter(n => n.startsWith("ppt/slides/")).sort((a, b) => num(a) - num(b));
     const notes = {};
     Object.keys(files).filter(n => n.startsWith("ppt/notesSlides/")).forEach(n => { notes[num(n)] = n; });
+    const en = BC.docs._en();
     return slides.map(n => {
       const xml = dec.decode(files[n]);
       // 按段落 <a:p> 分行，段内 <a:t> 拼接
       const paras = (xml.match(/<a:p\b[\s\S]*?<\/a:p>/g) || []).map(p => BC.docs._xmlText(p, "a:t").join("")).filter(t => t.trim());
-      let s = `--- 第 ${num(n)} 页 ---\n${paras.join("\n")}`;
+      let s = (en ? `--- Slide ${num(n)} ---` : `--- 第 ${num(n)} 页 ---`) + `\n${paras.join("\n")}`;
       const nn = notes[num(n)];
-      if (nn) { const nt = BC.docs._xmlText(dec.decode(files[nn]), "a:t").join(" ").trim(); if (nt) s += `\n[备注] ${nt}`; }
+      if (nn) { const nt = BC.docs._xmlText(dec.decode(files[nn]), "a:t").join(" ").trim(); if (nt) s += (en ? `\n[Notes] ${nt}` : `\n[备注] ${nt}`); }
       return s;
     }).join("\n\n");
   },
 
   async docx(arrayBuffer) {
     const files = await BC.docs.unzip(arrayBuffer, n => n === "word/document.xml");
-    if (!files["word/document.xml"]) throw new Error("docx 里没有 document.xml");
+    if (!files["word/document.xml"]) throw new Error(BC.t("docx 里没有 document.xml"));
     const xml = new TextDecoder("utf-8").decode(files["word/document.xml"]);
     return (xml.match(/<w:p\b[\s\S]*?<\/w:p>/g) || []).map(p => BC.docs._xmlText(p, "w:t").join("")).filter(t => t.trim()).join("\n");
   },
@@ -121,7 +129,7 @@ BC.docs = {
     const text = new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer));
     if (kind === "html") return BC.docs.html(text);
     if (kind === "text") return text;
-    if (kind === "legacy") throw new Error("老版 .ppt/.doc/.xls 是二进制格式，暂不支持；请老师提供 pptx/docx 或先转成 PDF");
-    throw new Error("不支持的文件类型");
+    if (kind === "legacy") throw new Error(BC.t("老版 .ppt/.doc/.xls 是二进制格式，暂不支持；请老师提供 pptx/docx 或先转成 PDF"));
+    throw new Error(BC.t("不支持的文件类型"));
   }
 };

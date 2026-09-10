@@ -1,0 +1,11 @@
+{
+  "extDescription": {
+    "message": "PotatoCanvas：更顶饱的 Canvas。卡片成绩、期中期末倒计时、截止提醒、消息高亮、主题美化、学习助手。"
+  },
+  "cmdAsk": {
+    "message": "学习助手：用当前选中的文字打开讲解浮窗（后台转发到当前标签页）"
+  },
+  "actionTitle": {
+    "message": "PotatoCanvas 设置"
+  }
+}

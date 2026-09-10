@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<link rel="stylesheet" href="canvas-frame.css">
+<link rel="stylesheet" href="../../styles/inject.css">
+<style>
+  .bc-list li a { color: #0374B5; }
+  .bc-latest-title, .bc-abs-name, .bc-exam-item-title { color: #0374B5; }
+  .bc-latest-ctl select { appearance: none; padding-right: 16px; }
+</style>
+</head>
+<body class="ic-app">
+
+<header id="header" class="ic-app-header">
+  <div class="ic-app-header__logomark-container">
+    <svg class="ic-app-header__logomark" viewBox="0 0 48 48"><path fill="#fff" d="M24 8 4 17l20 9 20-9-20-9zm-12 14.6V31c0 3.3 5.4 6 12 6s12-2.7 12-6v-8.4l-12 5.4-12-5.4zM42 19.5v10h2v-10h-2z"/></svg>
+  </div>
+  <nav class="ic-app-header__main-navigation">
+    <ul class="ic-app-header__menu-list">
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><span class="ic-avatar"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2c-4.4 0-9 2.2-9 5.5V22h18v-2.5c0-3.3-4.6-5.5-9-5.5z"/></svg></span><span class="menu-item__text">Account</span></a></li>
+      <li class="ic-app-header__menu-list-item ic-app-header__menu-list-item--active"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M12 3a10 10 0 0 0-8.66 15h17.32A10 10 0 0 0 12 3zm0 2a8 8 0 0 1 6.93 12H5.07A8 8 0 0 1 12 5zm-.7 9.3 5.9-7.2-7.3 5.8a1 1 0 1 0 1.4 1.4z"/></svg><span class="menu-item__text">Dashboard</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M5 2h11a3 3 0 0 1 3 3v17H8a3 3 0 0 1-3-3V2zm2 2v13a1 1 0 0 0 1 1h9V5a1 1 0 0 0-1-1H7zm2 3h6v2H9V7zm0 4h6v2H9v-2z"/></svg><span class="menu-item__text">Courses</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2zM5 9v11h14V9H5zm2 2h3v3H7v-3zm5 0h3v3h-3v-3z"/></svg><span class="menu-item__text">Calendar</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2.2V17h16V7.2l-8 5.3-8-5.3zM5.6 7l6.4 4.3L18.4 7H5.6z"/></svg><span class="menu-item__text">Inbox</span><span class="menu-item__badge">4</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm-1 3h2v5.6l3.5 2-1 1.7L11 13.2V7z"/></svg><span class="menu-item__text">History</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm-1.2 11h2.4v2.2h-2.4V15zm1.2-8.4c-2.2 0-3.7 1.3-3.8 3.3h2.2c.1-.8.6-1.3 1.6-1.3.9 0 1.4.5 1.4 1.2 0 .6-.3.9-1.2 1.5-1.1.7-1.5 1.3-1.5 2.4v.3h2.2v-.2c0-.6.3-.9 1.2-1.5 1.1-.7 1.7-1.4 1.7-2.6 0-1.9-1.5-3.1-3.8-3.1z"/></svg><span class="menu-item__text">Help</span></a></li>
+    </ul>
+  </nav>
+</header>
+
+<div id="wrapper">
+<div id="main">
+<div id="not_right_side">
+<div id="content">
+<div id="dashboard">
+
+  <div id="bc-blocks">
+
+    <div class="bc-block" data-block="absence">
+      <div class="bc-block-title">🧑‍🏫 Professor absence <span class="bc-pill bc-pill-bad">1 with notices</span></div>
+      <div class="bc-block-body"><ul class="bc-list bc-abs-list">
+        <li class="bc-abs-row bc-abs-ok"><span class="bc-abs-mark">✔</span><div class="bc-abs-body"><a class="bc-abs-name" href="#">INTRO TO DATA SCIENCE</a><div class="bc-abs-detail"><span class="bc-abs-sub">No notices in the last 21 days</span></div></div></li>
+        <li class="bc-abs-row bc-abs-bad"><span class="bc-abs-mark">✕</span><div class="bc-abs-body"><a class="bc-abs-name" href="#">CALCULUS II</a><div class="bc-abs-detail"><a class="bc-abs-msg" href="#">Announcement · No class Friday 9/12</a><span class="bc-when">Sep 9</span></div></div></li>
+        <li class="bc-abs-row bc-abs-ok"><span class="bc-abs-mark">✔</span><div class="bc-abs-body"><a class="bc-abs-name" href="#">DATA STRUCTURES</a><div class="bc-abs-detail"><span class="bc-abs-sub">No notices in the last 21 days</span></div></div></li>
+        <li class="bc-abs-row bc-abs-ok"><span class="bc-abs-mark">✔</span><div class="bc-abs-body"><a class="bc-abs-name" href="#">GENERAL PHYSICS LAB</a><div class="bc-abs-detail"><span class="bc-abs-sub">No notices in the last 21 days</span></div></div></li>
+      </ul></div>
+    </div>
+
+    <div class="bc-block" data-block="dueThisWeek">
+      <div class="bc-block-title">📅 Due this week <span class="bc-pill">4</span></div>
+      <div class="bc-block-body"><ul class="bc-list">
+        <li class="bc-urgent bc-due-today"><span class="bc-due-flag" title="Due today">⚠</span><a href="#">Quiz 2</a><span class="bc-when">Sep 10 23:59 · Today</span></li>
+        <li class="bc-urgent bc-due-soon"><a href="#">Lab 3 Quiz</a><span class="bc-when">Sep 11 09:00 · Tomorrow</span></li>
+        <li class="bc-due-near"><a href="#">Homework 4</a><span class="bc-when">Sep 12 23:59 · 2 days</span></li>
+        <li><a href="#">Reading Ch. 3</a><span class="bc-when">Sep 15 12:00 · 5 days</span></li>
+      </ul></div>
+    </div>
+
+    <div class="bc-block" data-block="latest">
+      <div class="bc-block-title">📨 Latest messages <span class="bc-pill bc-pill-bad">3 unread</span>
+        <span class="bc-latest-ctl"><span class="bc-latest-term">Fall 2026</span><select><option>Newest first ▾</option></select><select><option>All courses ▾</option></select></span>
+      </div>
+      <div class="bc-block-body"><ul class="bc-list bc-latest-list">
+        <li class="bc-latest-row bc-latest-unread" style="--bc-rule:#7048e8"><div class="bc-latest-hd"><span class="bc-latest-kind">Announcement</span><span class="bc-latest-course">INTRO TO DATA SCIENCE</span><span class="bc-latest-rule">Room change</span><span class="bc-when">Sep 10</span></div><a class="bc-latest-title" href="#">Thursday lecture moved to Hill 114</a></li>
+        <li class="bc-latest-row bc-latest-unread" style="--bc-rule:#e8590c"><div class="bc-latest-hd"><span class="bc-latest-kind">Announcement</span><span class="bc-latest-course">DATA STRUCTURES</span><span class="bc-latest-rule">Quiz / Exam</span><span class="bc-when">Sep 9</span></div><a class="bc-latest-title" href="#">Midterm 1 logistics and seating</a></li>
+        <li class="bc-latest-row bc-latest-unread"><div class="bc-latest-hd"><span class="bc-latest-kind">Message</span><span class="bc-latest-course">INTRO TO MEDIA</span><span class="bc-when">Sep 9</span></div><a class="bc-latest-title" href="#">Re: Group project partner list</a></li>
+        <li class="bc-latest-row"><div class="bc-latest-hd"><span class="bc-latest-kind">Announcement</span><span class="bc-latest-course">GENERAL PHYSICS LAB</span><span class="bc-when">Sep 8</span></div><a class="bc-latest-title" href="#">Week 3: pendulum lab handout posted</a></li>
+      </ul></div>
+    </div>
+
+    <div class="bc-block" data-block="gpa">
+      <div class="bc-block-title">🎯 GPA estimate</div>
+      <div class="bc-block-body">
+        <div class="bc-gpa-num">3.60</div>
+        <div class="bc-gpa-sub">Based on 5 active courses · cutoffs vary by course, for reference only</div>
+        <div class="bc-gpa-detail">A ×2 · B+ ×2 · C+ ×1</div>
+      </div>
+    </div>
+
+    <div class="bc-block" data-block="examCountdown">
+      <div class="bc-block-title">⏳ Exam countdown <button class="bc-scan-btn">Scan syllabus</button></div>
+      <div class="bc-block-body">
+        <div class="bc-exam-legend">
+          <a class="bc-exam-legend-item" href="#" style="--bc-cc:#c92a2a"><i class="bc-exam-dot"></i>INTRO TO DATA SCIENCE</a>
+          <a class="bc-exam-legend-item" href="#" style="--bc-cc:#1864ab"><i class="bc-exam-dot"></i>DATA STRUCTURES</a>
+          <a class="bc-exam-legend-item" href="#" style="--bc-cc:#2b7a3b"><i class="bc-exam-dot"></i>CALCULUS II</a>
+          <a class="bc-exam-legend-item" href="#" style="--bc-cc:#b35c00"><i class="bc-exam-dot"></i>GENERAL PHYSICS LAB</a>
+          <span class="bc-exam-hint">Right-click an item to edit</span>
+        </div>
+        <div class="bc-exam-groups">
+          <div class="bc-exam-group bc-exam-group-week">
+            <div class="bc-exam-group-hd">This week <span class="bc-pill">1</span></div>
+            <ul class="bc-exam-items">
+              <li class="bc-exam-item bc-urgent" style="--bc-cc:#c92a2a"><div class="bc-exam-item-hd"><span class="bc-exam-course-tag">INTRO TO DATA SCIENCE</span><span class="bc-exam-type">Midterm</span><span class="bc-exam-days">3 days</span></div><a class="bc-exam-item-title" href="#">Midterm 1</a><span class="bc-when">Sep 13</span></li>
+            </ul>
+          </div>
+          <div class="bc-exam-group bc-exam-group-two">
+            <div class="bc-exam-group-hd">Within 2 weeks <span class="bc-pill">1</span></div>
+            <ul class="bc-exam-items">
+              <li class="bc-exam-item" style="--bc-cc:#2b7a3b"><div class="bc-exam-item-hd"><span class="bc-exam-course-tag">CALCULUS II</span><span class="bc-exam-type">Exam</span><span class="bc-exam-days">11 days</span></div><a class="bc-exam-item-title" href="#">Exam 1</a><span class="bc-when">Sep 21</span></li>
+            </ul>
+          </div>
+          <div class="bc-exam-group bc-exam-group-month">
+            <div class="bc-exam-group-hd">Within a month <span class="bc-pill">1</span></div>
+            <ul class="bc-exam-items">
+              <li class="bc-exam-item" style="--bc-cc:#b35c00"><div class="bc-exam-item-hd"><span class="bc-exam-course-tag">GENERAL PHYSICS LAB</span><span class="bc-exam-type">Midterm</span><span class="bc-exam-days">24 days</span></div><a class="bc-exam-item-title" href="#">Lab practical</a><span class="bc-when">Oct 4</span></li>
+            </ul>
+          </div>
+          <div class="bc-exam-group bc-exam-group-later">
+            <div class="bc-exam-group-hd">Later <span class="bc-pill">1</span></div>
+            <ul class="bc-exam-items">
+              <li class="bc-exam-item" style="--bc-cc:#1864ab"><div class="bc-exam-item-hd"><span class="bc-exam-course-tag">DATA STRUCTURES</span><span class="bc-exam-type">Final</span><span class="bc-exam-days">97 days</span></div><a class="bc-exam-item-title" href="#">Final exam</a><span class="bc-when">Dec 16</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#bc-blocks -->
+
+  <div class="ic-Dashboard-header">
+    <div class="ic-Dashboard-header__layout">
+      <h1 class="ic-Dashboard-header__title">Dashboard</h1>
+      <div class="ic-Dashboard-header__actions">
+        <button class="Button--icon-action" title="Dashboard Options"><svg viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="ic-DashboardCard__box">
+    <div class="ic-DashboardCard__box__container">
+
+      <div class="ic-DashboardCard bc-has-side">
+        <div class="ic-DashboardCard__header">
+          <div class="ic-DashboardCard__header_hero" style="background-color:#BD3C14"></div>
+          <button class="ic-DashboardCard__header-button"><svg viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></button>
+          <button class="bc-bell">🔔<span class="bc-bell-badge">2</span></button>
+          <div class="ic-DashboardCard__header_content">
+            <h3 class="ic-DashboardCard__header-title ellipsis" style="color:#BD3C14">INTRO TO DATA SCIENCE</h3>
+            <div class="ic-DashboardCard__header-subtitle ellipsis">01:198:210:02</div>
+            <div class="ic-DashboardCard__header-term ellipsis">Fall 2026</div>
+          </div>
+        </div>
+        <nav class="ic-DashboardCard__action-container">
+          <a class="ic-DashboardCard__action" href="#"><svg viewBox="0 0 24 24"><path d="M3 9v6h3l5 4V5L6 9H3zm11 .5a3 3 0 0 1 0 5v-5zm0-4a7 7 0 0 1 0 13v-2a5 5 0 0 0 0-9v-2z"/></svg><span class="ic-DashboardCard__action-badge">1</span></a>
+          <a class="ic-DashboardCard__action" href="#"><svg viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6V2zm7 1.5V8h4.5L13 3.5zM8 11h8v2H8v-2zm0 4h8v2H8v-2z"/></svg></a>
+          <a class="ic-DashboardCard__action" href="#"><svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8l-6 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v10h4v2.3L11.4 15H20V5H4z"/></svg></a>
+        </nav>
+        <div class="bc-side">
+          <div class="bc-side-row bc-side-r-score"><span class="bc-side-lbl">Total</span><span class="bc-side-val">91%<small>A</small></span><span class="bc-side-sub"><span class="bc-side-pts">412/453</span></span></div>
+          <div class="bc-side-row bc-side-r-gpa"><span class="bc-side-lbl">GPA</span><span class="bc-side-val">3.7</span><span class="bc-side-sub"></span></div>
+          <div class="bc-side-row bc-side-r-cls"><span class="bc-side-lbl">Class avg</span><span class="bc-side-val"><span class="bc-side-cls">84<span class="bc-side-diff bc-up">+7.0</span></span></span><span class="bc-side-sub"><span class="bc-side-clssub">Range 61–98</span></span></div>
+          <div class="bc-side-row bc-side-r-sec"><span class="bc-side-lbl">Section</span><span class="bc-side-val">Sec 02</span><span class="bc-side-sub">index 14277</span></div>
+        </div>
+      </div>
+
+      <div class="ic-DashboardCard bc-has-side">
+        <div class="ic-DashboardCard__header">
+          <div class="ic-DashboardCard__header_hero" style="background-color:#2D3B45"></div>
+          <button class="ic-DashboardCard__header-button"><svg viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></button>
+          <button class="bc-bell">🔔<span class="bc-bell-badge">1</span></button>
+          <div class="ic-DashboardCard__header_content">
+            <h3 class="ic-DashboardCard__header-title ellipsis" style="color:#2D3B45">DATA STRUCTURES</h3>
+            <div class="ic-DashboardCard__header-subtitle ellipsis">01:198:112:05</div>
+            <div class="ic-DashboardCard__header-term ellipsis">Fall 2026</div>
+          </div>
+        </div>
+        <nav class="ic-DashboardCard__action-container">
+          <a class="ic-DashboardCard__action" href="#"><svg viewBox="0 0 24 24"><path d="M3 9v6h3l5 4V5L6 9H3zm11 .5a3 3 0 0 1 0 5v-5zm0-4a7 7 0 0 1 0 13v-2a5 5 0 0 0 0-9v-2z"/></svg></a>
+          <a class="ic-DashboardCard__action" href="#"><svg viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6V2zm7 1.5V8h4.5L13 3.5zM8 11h8v2H8v-2zm0 4h8v2H8v-2z"/></svg><span class="ic-DashboardCard__action-badge">2</span></a>
+          <a class="ic-DashboardCard__action" href="#"><svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8l-6 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v10h4v2.3L11.4 15H20V5H4z"/></svg></a>
+        </nav>
+        <div class="bc-side">
+          <div class="bc-side-row bc-side-r-score"><span class="bc-side-lbl">Total</span><span class="bc-side-val">87%<small>B+</small></span><span class="bc-side-sub"><span class="bc-side-pts">261/300</span></span></div>
+          <div class="bc-side-row bc-side-r-gpa"><span class="bc-side-lbl">GPA</span><span class="bc-side-val">3.3</span><span class="bc-side-sub"></span></div>
+          <div class="bc-side-row bc-side-r-cls"><span class="bc-side-lbl">Class avg</span><span class="bc-side-val"><span class="bc-side-cls">79<span class="bc-side-diff bc-up">+8.0</span></span></span><span class="bc-side-sub"><span class="bc-side-clssub">Range 52–97</span></span></div>
+          <div class="bc-side-row bc-side-r-sec"><span class="bc-side-lbl">Section</span><span class="bc-side-val">Sec 05</span><span class="bc-side-sub">index 09188</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /#dashboard -->
+</div>
+</div><!-- /#not_right_side -->
+
+<div id="right-side-wrapper">
+<aside id="right-side">
+
+  <div class="bc-block bc-links">
+    <div class="bc-block-title">🧭 Quick Links <span class="bc-links-hint">Opens in a new tab</span></div>
+    <div class="bc-block-body">
+      <details class="bc-links-group" open>
+        <summary>Courses / Academics <span class="bc-pill">9</span></summary>
+        <ul class="bc-links-list">
+          <li><a href="#"><span class="bc-links-emoji">🗓️</span><span class="bc-links-name">WebReg Registration</span><span class="bc-links-ext">↗</span></a></li>
+          <li><a href="#"><span class="bc-links-emoji">📖</span><span class="bc-links-name">Schedule of Classes</span><span class="bc-links-ext">↗</span></a></li>
+          <li><a href="#"><span class="bc-links-emoji">🧭</span><span class="bc-links-name">Course Schedule Planner</span><span class="bc-links-ext">↗</span></a></li>
+          <li><a href="#"><span class="bc-links-emoji">🎓</span><span class="bc-links-name">Degree Navigator</span><span class="bc-links-ext">↗</span></a></li>
+        </ul>
+      </details>
+      <details class="bc-links-group"><summary>Account / Billing <span class="bc-pill">6</span></summary></details>
+      <details class="bc-links-group"><summary>Campus Life <span class="bc-pill">7</span></summary></details>
+    </div>
+  </div>
+
+  <div class="bc-block bc-sbg bc-sec">
+    <div class="bc-block-title">🔢 Course sections</div>
+    <ul class="bc-sec-list">
+      <li class="bc-sec-row"><span class="bc-sec-badge">Sec 02</span><div class="bc-sec-body"><a class="bc-sec-name" href="#">INTRO TO DATA SCIENCE</a><div class="bc-sec-sub">01:198:210:02 · index 14277</div></div></li>
+      <li class="bc-sec-row"><span class="bc-sec-badge">Sec 05</span><div class="bc-sec-body"><a class="bc-sec-name" href="#">DATA STRUCTURES</a><div class="bc-sec-sub">01:198:112:05 · index 09188</div></div></li>
+      <li class="bc-sec-row"><span class="bc-sec-badge">Sec 14</span><div class="bc-sec-body"><a class="bc-sec-name" href="#">CALCULUS II</a><div class="bc-sec-sub">01:640:152:14 · index 07412</div></div></li>
+      <li class="bc-sec-row"><span class="bc-sec-badge">Sec 31</span><div class="bc-sec-body"><a class="bc-sec-name" href="#">GENERAL PHYSICS LAB</a><div class="bc-sec-sub">01:750:229:31 · index 11036</div></div></li>
+    </ul>
+    <div class="bc-sbg-foot">section = 4th segment of the course number; index from the WebReg schedule</div>
+  </div>
+
+  <a class="Button button-sidebar-wide" href="#"><svg viewBox="0 0 24 24"><path d="M4 3h16v18H4V3zm2 2v14h12V5H6zm2 3h8v2H8V8zm0 4h8v2H8v-2zm0 4h5v2H8v-2z"/></svg>View Grades</a>
+
+</aside>
+</div>
+
+</div><!-- /#main -->
+</div><!-- /#wrapper -->
+
+<button id="bc-study-btn" title="Study tools: page chat / flashcards / practice">📖</button>
+<button id="bc-gear" title="PotatoCanvas Settings">⚙</button>
+
+</body>
+</html>

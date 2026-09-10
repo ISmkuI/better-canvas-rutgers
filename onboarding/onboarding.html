@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PotatoCanvas · 新手引导</title>
+  <link rel="icon" href="../icons/icon128.png">
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <img class="logo" src="../icons/icon128.png" alt="">
+      <div>
+        <div class="brand">PotatoCanvas <span class="tag">Rutgers</span></div>
+        <div class="sub" data-i18n="新手引导 · 一分钟配好">新手引导 · 一分钟配好</div>
+      </div>
+    </header>
+
+    <ol class="dots" id="dots" aria-label="progress">
+      <li data-step="0" class="on"></li>
+      <li data-step="1"></li>
+      <li data-step="2"></li>
+      <li data-step="3"></li>
+      <li data-step="4"></li>
+    </ol>
+
+    <main class="card">
+      <!-- 1 欢迎 -->
+      <section class="step" data-step="0">
+        <h1 data-i18n="👋 欢迎使用 PotatoCanvas">👋 欢迎使用 PotatoCanvas</h1>
+        <p class="lead" data-i18n="给 Rutgers Canvas 加上这些东西：">给 Rutgers Canvas 加上这些东西：</p>
+        <ul class="feats">
+          <li><span class="ico">🎨</span><div><b data-i18n="外观主题">外观主题</b><span data-i18n="十来个预设风格（暗夜 / 清新 / 像素风 / 赛博朋克…），还能自己调色、换背景。">十来个预设风格（暗夜 / 清新 / 像素风 / 赛博朋克…），还能自己调色、换背景。</span></div></li>
+          <li><span class="ico">🃏</span><div><b data-i18n="卡片成绩与班级均分">卡片成绩与班级均分</b><span data-i18n="课程卡旁直接看总评、GPA、班级均分和 Section，不用一门门点进去。">课程卡旁直接看总评、GPA、班级均分和 Section，不用一门门点进去。</span></div></li>
+          <li><span class="ico">📊</span><div><b data-i18n="仪表盘面板">仪表盘面板</b><span data-i18n="本周截止、期中期末倒计时、今日课程、最新消息，都放在仪表盘顶部。">本周截止、期中期末倒计时、今日课程、最新消息，都放在仪表盘顶部。</span></div></li>
+          <li><span class="ico">✨</span><div><b data-i18n="学习助手（可选）">学习助手（可选）</b><span data-i18n="选中文字提问、页面对话、闪卡、练习题。需要自备模型 API key，只从你的浏览器直连。">选中文字提问、页面对话、闪卡、练习题。需要自备模型 API key，只从你的浏览器直连。</span></div></li>
+        </ul>
+        <div class="field">
+          <label for="lang" data-i18n="界面语言">界面语言</label>
+          <select id="lang"></select>
+        </div>
+      </section>
+
+      <!-- 2 外观 -->
+      <section class="step" data-step="1" hidden>
+        <h1 data-i18n="🎨 选一个外观">🎨 选一个外观</h1>
+        <p class="lead" data-i18n="点一下就生效，之后随时可以在设置里换。">点一下就生效，之后随时可以在设置里换。</p>
+        <div class="gallery" id="gallery"></div>
+      </section>
+
+      <!-- 3 仪表盘 -->
+      <section class="step" data-step="2" hidden>
+        <h1 data-i18n="📊 仪表盘">📊 仪表盘</h1>
+        <p class="lead" data-i18n="这些默认都是开着的，不想要的关掉即可。">这些默认都是开着的，不想要的关掉即可。</p>
+        <div class="toggles">
+          <label class="tg"><input type="checkbox" data-path="cards.showGrade"><div><b data-i18n="卡片成绩">卡片成绩</b><span data-i18n="每张课程卡旁显示总评 / GPA / 班级均分 / Section">每张课程卡旁显示总评 / GPA / 班级均分 / Section</span></div></label>
+          <label class="tg"><input type="checkbox" data-path="blocks.enabled"><div><b data-i18n="自定义面板">自定义面板</b><span data-i18n="仪表盘顶部：本周截止、GPA、倒计时、今日课程、最新消息">仪表盘顶部：本周截止、GPA、倒计时、今日课程、最新消息</span></div></label>
+          <label class="tg"><input type="checkbox" data-path="sidebar.hideTodo" data-also="sidebar.hideFeedback"><div><b data-i18n="隐藏 Canvas 自带的 To Do / Recent Feedback">隐藏 Canvas 自带的 To Do / Recent Feedback</b><span data-i18n="本周截止面板已经覆盖了它们的功能，右侧栏会清爽很多">本周截止面板已经覆盖了它们的功能，右侧栏会清爽很多</span></div></label>
+          <label class="tg"><input type="checkbox" data-path="theme.cursorTrail"><div><b data-i18n="鼠标拖尾">鼠标拖尾</b><span data-i18n="样式跟随预设主题；没选预设时不显示">样式跟随预设主题；没选预设时不显示</span></div></label>
+          <label class="tg"><input type="checkbox" data-path="assistant.contextMenu"><div><b data-i18n="右键助手菜单">右键助手菜单</b><span data-i18n="选中文字后右键直接弹出助手（思路 / 解答 / 概念 / 翻译）">选中文字后右键直接弹出助手（思路 / 解答 / 概念 / 翻译）</span></div></label>
+        </div>
+        <p class="note" data-i18n="提示：仪表盘功能需要经典的卡片式仪表盘。如果你的 Canvas 首页是列表 / 最近活动视图，点右上角「⋮」→「Switch to old dashboard view / Card View」。">提示：仪表盘功能需要经典的卡片式仪表盘。如果你的 Canvas 首页是列表 / 最近活动视图，点右上角「⋮」→「Switch to old dashboard view / Card View」。</p>
+      </section>
+
+      <!-- 4 助手 -->
+      <section class="step" data-step="3" hidden>
+        <h1 data-i18n="✨ 学习助手（可选）">✨ 学习助手（可选）</h1>
+        <p class="lead" data-i18n="填一个模型服务的 API key 就能用。现在不想填也没关系，之后在设置的「✨ 助手」里随时补。">填一个模型服务的 API key 就能用。现在不想填也没关系，之后在设置的「✨ 助手」里随时补。</p>
+        <div class="field">
+          <label for="provider" data-i18n="模型服务">模型服务</label>
+          <select id="provider"></select>
+        </div>
+        <div class="field">
+          <label for="apikey">API key</label>
+          <input type="password" id="apikey" autocomplete="off" spellcheck="false" placeholder="sk-…">
+        </div>
+        <div class="field">
+          <label for="model" data-i18n="模型（可选）">模型（可选）</label>
+          <input type="text" id="model" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field" id="baseurl-field" hidden>
+          <label for="baseurl" data-i18n="接口地址（OpenAI 兼容，填到 /v1）">接口地址（OpenAI 兼容，填到 /v1）</label>
+          <input type="text" id="baseurl" autocomplete="off" spellcheck="false" placeholder="https://…/v1">
+        </div>
+        <p class="saved" id="ai-saved" hidden data-i18n="✓ 已保存">✓ 已保存</p>
+        <p class="note" data-i18n="隐私：key 只保存在你这台浏览器的扩展存储里，不经过任何中间服务器。只有你主动提问时，选中的文字 / 页面内容 / 截图才会发给你选的这家模型服务。">隐私：key 只保存在你这台浏览器的扩展存储里，不经过任何中间服务器。只有你主动提问时，选中的文字 / 页面内容 / 截图才会发给你选的这家模型服务。</p>
+      </section>
+
+      <!-- 5 完成 -->
+      <section class="step" data-step="4" hidden>
+        <h1 data-i18n="🎉 配好了">🎉 配好了</h1>
+        <p class="lead" data-i18n="接下来：">接下来：</p>
+        <ol class="next">
+          <li><b data-i18n="打开 Canvas 仪表盘">打开 Canvas 仪表盘</b><span data-i18n="所有功能都在那里生效；第一次进去会有一个页内导览。">所有功能都在那里生效；第一次进去会有一个页内导览。</span></li>
+          <li><b data-i18n="右下角 ⚙ 是完整设置">右下角 ⚙ 是完整设置</b><span data-i18n="外观微调、面板排序、消息关键词、期中期末日期、助手模型都在里面。">外观微调、面板排序、消息关键词、期中期末日期、助手模型都在里面。</span></li>
+          <li><b data-i18n="工具栏图标是快速开关">工具栏图标是快速开关</b><span data-i18n="主题 / 卡片成绩 / 面板 / 消息铃铛一键开关，还有清缓存。">主题 / 卡片成绩 / 面板 / 消息铃铛一键开关，还有清缓存。</span></li>
+        </ol>
+        <div class="actions">
+          <button type="button" class="primary" id="open-canvas" data-i18n="打开 Canvas">打开 Canvas</button>
+          <button type="button" id="open-tour" data-i18n="在 Canvas 里看一遍页内导览">在 Canvas 里看一遍页内导览</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="nav">
+      <button type="button" id="prev" data-i18n="上一步">上一步</button>
+      <span class="counter" id="counter">1 / 5</span>
+      <button type="button" class="primary" id="next" data-i18n="下一步">下一步</button>
+    </footer>
+    <p class="hint" data-i18n="← → 方向键也能翻页">← → 方向键也能翻页</p>
+  </div>
+
+  <script src="../src/i18n.js"></script>
+  <script src="../src/storage.js"></script>
+  <script src="../src/themes.js"></script>
+  <script src="onboarding.js"></script>
+</body>
+</html>

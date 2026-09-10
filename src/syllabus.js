@@ -3,6 +3,12 @@
  *  2) 解析上传的文本/文档内容
  *  3) 手动填写（在设置面板里）
  * 统一产出 {type, title, date} 写入 settings.examDates[courseId]。 */
+BC.i18n.add({
+  "Word/PPT 暂不支持，请另存为 PDF 或 .txt，或把文字粘贴到文本框": "Word/PPT aren't supported yet; save as PDF or .txt, or paste the text into the text box",
+  "没能从该 PDF 提取到文字（可能是扫描件或特殊字体）。请改用文本/手动添加。": "Couldn't extract any text from this PDF (it may be a scan or use unusual fonts). Use text input or add dates manually instead.",
+  "…（文档太长，后面已截断）": "…(document too long, truncated)"
+});
+
 BC.syllabus = {
   MONTHS: {
     jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8,
@@ -278,7 +284,7 @@ BC.syllabus = {
       return BC.syllabus.extractPdfText(await file.arrayBuffer());
     }
     if (/\.(docx?|pptx?)$/.test(name)) {
-      throw new Error("Word/PPT 暂不支持，请另存为 PDF 或 .txt，或把文字粘贴到文本框");
+      throw new Error(BC.t("Word/PPT 暂不支持，请另存为 PDF 或 .txt，或把文字粘贴到文本框"));
     }
     return file.text();
   },
@@ -356,33 +362,52 @@ BC.syllabus = {
     return out.join("\n");
   },
 
+  // 明显不是页面内容的流：图片、内嵌字体（FontFile / Length1 / Type1C…）、交叉引用、元数据、对象流、ICC、附件。
+  // 只按字典判断，判不出来的流仍会解开找文字操作符
+  PDF_SKIP: /\/Subtype\s*\/(Image|Type1C|CIDFontType0C|OpenType)\b|\/FontFile\d?\b|\/Length1\b|\/Type\s*\/(XRef|Metadata|EmbeddedFile|ObjStm)\b|\/ICCBased\b|\/(DCTDecode|JPXDecode|CCITTFaxDecode|JBIG2Decode)\b/,
+  PDF_STREAM_MAX: 16 * 1024 * 1024,   // 单个流解压后超过这个大小基本是图片 / 字体，不看
+  PDF_TEXT_MAX: 8 * 1024 * 1024,      // 提取文字总量上限（整本教材也就两三百万字）
+
   async extractPdfText(arrayBuffer) {
+    const S = BC.syllabus;
     const u8 = new Uint8Array(arrayBuffer);
-    const raw = BC.syllabus._latin1(u8);
-    let collected = "";
+    const raw = S._latin1(u8);
+    // 每个流单独解开、单独取文字，只累积文字本身。以前是把所有解压后的流（含字体 / 图片二进制）拼成一个字符串再找文字，
+    // 一本几百 MB 的教材会超过 JS 单个字符串的长度上限（RangeError: Invalid string length）
+    const parts = [];
+    let total = 0, truncated = false;
     const reStream = /(?<!end)stream\r?\n/g;   // 别把 endstream\n 也当成流开头
     let m;
     while ((m = reStream.exec(raw))) {
       const dataStart = m.index + m[0].length;
       const end = raw.indexOf("endstream", dataStart);
       if (end < 0) continue;
-      const dictStart = raw.lastIndexOf("<<", m.index);
-      const dict = dictStart >= 0 ? raw.slice(dictStart, m.index) : "";
+      // 流所属对象的整个字典（从 "N 0 obj" 起），而不是最近的一个 "<<"——嵌套的 /DecodeParms << >> 会挡住外层的 /Subtype /Image
+      const objStart = raw.lastIndexOf(" obj", m.index);
+      const dict = raw.slice(Math.max(0, objStart >= 0 ? objStart : m.index - 4000, m.index - 4000), m.index);
+      if (S.PDF_SKIP.test(dict)) { reStream.lastIndex = end; continue; }
       // 有 /Length 就按长度精确切，避免把尾部换行带进去
       const lm = /\/Length\s+(\d+)(?!\s+0\s+R)/.exec(dict);
       const dataEnd = lm && dataStart + (+lm[1]) <= end ? dataStart + (+lm[1]) : end;
-      const slice = u8.subarray(dataStart, dataEnd);
+      let content = "";
       if (/FlateDecode/.test(dict)) {
-        const inf = await BC.syllabus._inflate(slice);
-        if (inf) collected += BC.syllabus._latin1(inf) + "\n";
-      } else if (!/(DCTDecode|JPXDecode|CCITTFaxDecode|JBIG2Decode|Image)/.test(dict)) {
-        collected += raw.slice(dataStart, end) + "\n";
+        const inf = await S._inflate(u8.subarray(dataStart, dataEnd));
+        if (inf && inf.length <= S.PDF_STREAM_MAX) content = S._latin1(inf);
+      } else if (end - dataStart <= S.PDF_STREAM_MAX) {
+        content = raw.slice(dataStart, end);
       }
+      reStream.lastIndex = end;
+      if (!content || !/T[Jj]|['"]\s/.test(content)) continue;   // 没有文字操作符的流直接扔
+      const t = S._pdfText(content);
+      if (!t) continue;
+      parts.push(t);
+      total += t.length + 1;
+      if (total > S.PDF_TEXT_MAX) { truncated = true; break; }
     }
-    const text = BC.syllabus._pdfText(collected);
+    const text = parts.join("\n");
     if (!text.trim()) {
-      throw new Error("没能从该 PDF 提取到文字（可能是扫描件或特殊字体）。请改用文本/手动添加。");
+      throw new Error(BC.t("没能从该 PDF 提取到文字（可能是扫描件或特殊字体）。请改用文本/手动添加。"));
     }
-    return text;
+    return truncated ? text + "\n" + BC.t("…（文档太长，后面已截断）") : text;
   }
 };

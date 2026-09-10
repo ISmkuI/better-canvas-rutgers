@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="导出 PDF · PotatoCanvas">导出 PDF · PotatoCanvas</title>
+  <link rel="stylesheet" href="print.css">
+</head>
+<body>
+  <div id="bc-bar" class="bc-noprint">
+    <span id="bc-status" data-i18n="正在装载…">正在装载…</span>
+    <label><input type="checkbox" id="bc-break" checked> <span data-i18n="每节另起一页">每节另起一页</span></label>
+    <button id="bc-print" disabled data-i18n="🖨 打印 / 另存为 PDF">🖨 打印 / 另存为 PDF</button>
+  </div>
+  <div id="bc-root"></div>
+  <script src="../src/i18n.js"></script>
+  <script src="../src/reader-db.js"></script>
+  <script src="../src/reader-links.js"></script>
+  <script src="print.js"></script>
+</body>
+</html>

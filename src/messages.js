@@ -1,6 +1,17 @@
 /* 消息：合并 课程公告 + 收件箱私信，按课程聚合，
  * 在卡片右上角(三点菜单左侧)放铃铛，未读数角标，点击弹出消息列表。
  * 区分已读/未读(透明度)，重要消息(测验/换教室/请假/截止)按类别上色。 */
+BC.i18n.add({
+  "(无标题公告)": "(untitled announcement)",
+  "(无主题私信)": "(no subject)",
+  "课程消息": "Course messages",
+  "最近没有消息": "No recent messages",
+  "全部标为已读": "Mark all as read",
+  "全标已读": "Mark all read",
+  "私信": "Message",
+  "公告": "Announcement"
+});
+
 BC.messages = {
   _byCourse: null,   // { [courseId]: [msg...] }
   _settings: null,
@@ -14,8 +25,16 @@ BC.messages = {
     return null;
   },
 
-  // 拉取原始数据（带 3 分钟缓存，避免观察器重复触发时狂刷 API）
-  async _fetchRaw(settings) {
+  // 拉取原始数据（带 3 分钟缓存，避免观察器重复触发时狂刷 API）。
+  // in-flight 去重：铃铛 / 教授请假 / 最新消息 三个渲染器并发调 fetchAll，缓存冷时共用同一个请求。
+  _inflight: null,
+  _fetchRaw(settings) {
+    if (BC.messages._inflight) return BC.messages._inflight;
+    const p = BC.messages._fetchRawNow(settings).finally(() => { BC.messages._inflight = null; });
+    BC.messages._inflight = p;
+    return p;
+  },
+  async _fetchRawNow(settings) {
     const cached = await BC.cache.get("msgs_raw", 3 * 60 * 1000);
     if (cached) return cached;
     const lookback = settings.messages.lookbackDays || 21;
@@ -52,7 +71,7 @@ BC.messages = {
         push(cid, {
           id,
           kind: "announcement",
-          title: a.title || "(无标题公告)",
+          title: a.title || BC.t("(无标题公告)"),
           body: BC.messages._strip(a.message),
           date: a.posted_at || a.created_at,
           url: a.html_url,
@@ -71,7 +90,7 @@ BC.messages = {
         push(cid, {
           id,
           kind: "inbox",
-          title: c.subject || "(无主题私信)",
+          title: c.subject || BC.t("(无主题私信)"),
           body: c.last_message || "",
           date: c.last_message_at,
           url: `/conversations/${c.id}`,
@@ -111,7 +130,7 @@ BC.messages = {
 
       const bell = document.createElement("button");
       bell.className = "bc-bell";
-      bell.title = "课程消息";
+      bell.title = BC.t("课程消息");
       bell.innerHTML = `🔔${unread ? `<span class="bc-bell-badge">${unread > 99 ? "99+" : unread}</span>` : ""}`;
       bell.addEventListener("click", e => {
         e.preventDefault(); e.stopPropagation();
@@ -144,7 +163,7 @@ BC.messages = {
         if (titleLink && !row.querySelector(".bc-row-tag")) {
           const tag = document.createElement("span");
           tag.className = "bc-row-tag";
-          tag.textContent = rule.label;
+          tag.textContent = BC.t(rule.label);   // 类别词典在 storage.js 登记
           tag.style.background = rule.color;
           titleLink.insertAdjacentElement("afterend", tag);
         }
@@ -191,10 +210,10 @@ BC.messages = {
     pop.className = "bc-msg-popup";
     const rows = msgs.length
       ? msgs.map(m => BC.messages._row(m)).join("")
-      : `<div class="bc-msg-empty">最近没有消息</div>`;
+      : `<div class="bc-msg-empty">${BC.t("最近没有消息")}</div>`;
     pop.innerHTML =
-      `<div class="bc-msg-head">课程消息 <span class="bc-msg-count">${msgs.length}</span>
-        <button class="bc-msg-allread" title="全部标为已读">全标已读</button></div>
+      `<div class="bc-msg-head">${BC.t("课程消息")} <span class="bc-msg-count">${msgs.length}</span>
+        <button class="bc-msg-allread" title="${BC.t("全部标为已读")}">${BC.t("全标已读")}</button></div>
        <div class="bc-msg-list">${rows}</div>`;
     document.body.appendChild(pop);
 
@@ -223,8 +242,8 @@ BC.messages = {
 
   _row(m) {
     const stripe = m.rule ? `border-left:4px solid ${m.rule.color};` : "border-left:4px solid transparent;";
-    const tag = m.rule ? `<span class="bc-msg-tag" style="background:${m.rule.color}">${m.rule.label}</span>` : "";
-    const kindTag = m.kind === "inbox" ? `<span class="bc-msg-kind">私信</span>` : `<span class="bc-msg-kind">公告</span>`;
+    const tag = m.rule ? `<span class="bc-msg-tag" style="background:${m.rule.color}">${BC.t(m.rule.label)}</span>` : "";
+    const kindTag = `<span class="bc-msg-kind">${m.kind === "inbox" ? BC.t("私信") : BC.t("公告")}</span>`;
     return `<div class="bc-msg-item ${m.unread ? "bc-unread" : "bc-read"}" data-mid="${m.id}" data-url="${BC.util.esc(m.url || "")}" style="${stripe}">
       <div class="bc-msg-title">${m.unread ? '<span class="bc-dot"></span>' : ""}${BC.util.esc(m.title)}</div>
       <div class="bc-msg-meta">${kindTag}${tag}<span class="bc-msg-date">${m.date ? BC.util.fmtDate(m.date) : ""}</span></div>

@@ -1,6 +1,18 @@
 /* 右侧栏「常用网站」导航：Rutgers 学生常用的站点，按类别折叠，点击在新标签页打开。
  * 链接列表存在 settings.links（可在设置面板增删 / 恢复默认），默认只在仪表盘显示，
  * settings.sidebar.linksEverywhere 打开后所有带右侧栏的页面都显示。 */
+BC.i18n.add({
+  // 分组
+  "选课 / 学业": "Courses / Academics", "账户 / 缴费": "Account / Billing", "校园生活": "Campus Life", "其他": "Other",
+  // 默认链接名（存的是中文，显示时翻译）
+  "WebReg 选课": "WebReg Registration", "Learning Centers 辅导": "Learning Centers (Tutoring)",
+  "NetID 管理": "NetID Management", "Term Bill 学费账单": "Term Bill",
+  "Rutgers 校车": "Rutgers Bus (Tripshot)", "Dining 食堂": "Dining", "Recreation 健身": "Recreation", "Housing 宿舍": "Housing",
+  "getINVOLVED 社团活动": "getINVOLVED (Clubs & Events)", "Handshake 实习求职": "Handshake (Jobs & Internships)",
+  // 侧栏卡片
+  "🧭 常用网站": "🧭 Quick Links", "新标签页打开": "Opens in a new tab",
+  "还没有链接，去设置面板添加。": "No links yet. Add some in the settings panel."
+});
 BC.links = {
   ID: "bc-sb-links",
 
@@ -68,12 +80,12 @@ BC.links = {
 
     const html = Object.entries(groups).map(([g, items]) => `
       <details class="bc-links-group" data-group="${esc(g)}" ${openGroups.has(g) ? "open" : ""}>
-        <summary>${esc(g)} <span class="bc-pill">${items.length}</span></summary>
+        <summary>${esc(BC.t(g))} <span class="bc-pill">${items.length}</span></summary>
         <ul class="bc-links-list">
           ${items.map(it => `<li>
             <a href="${esc(L.resolveUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(L.resolveUrl(it.url))}">
               <span class="bc-links-emoji">${esc(it.emoji || "🔗")}</span>
-              <span class="bc-links-name">${esc(it.name || it.url)}</span>
+              <span class="bc-links-name">${esc(it.name ? BC.t(it.name) : it.url)}</span>
               <span class="bc-links-ext" aria-hidden="true">↗</span>
             </a>
           </li>`).join("")}
@@ -84,8 +96,8 @@ BC.links = {
     card.className = "bc-block bc-links";
     card.id = L.ID;
     card.innerHTML =
-      `<div class="bc-block-title">🧭 常用网站 <span class="bc-links-hint">新标签页打开</span></div>
-       <div class="bc-block-body">${html || "<small>还没有链接，去设置面板添加。</small>"}</div>`;
+      `<div class="bc-block-title">${BC.t("🧭 常用网站")} <span class="bc-links-hint">${BC.t("新标签页打开")}</span></div>
+       <div class="bc-block-body">${html || "<small>" + BC.t("还没有链接，去设置面板添加。") + "</small>"}</div>`;
 
     // 记住折叠状态
     card.querySelectorAll("details.bc-links-group").forEach(d => {

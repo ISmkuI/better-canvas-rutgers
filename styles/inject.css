@@ -1,4 +1,4 @@
-/* ====== Better Canvas 注入样式 ====== */
+/* ====== PotatoCanvas 注入样式 ====== */
 
 /* ====== 预设主题：动画层 / 透明 / 故障 ====== */
 #bc-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; border: 0; display: block; }
@@ -52,6 +52,45 @@ html.bc-fx-active #content, html.bc-fx-active #content-wrapper, html.bc-fx-activ
 }
 .bc-grade-letter { opacity: .85; font-weight: 600; }
 .bc-grade-pts { opacity: .8; font-weight: 600; font-size: 11px; }
+/* 班级成绩范围：卡片头部右下角。最低–最高 · 均值 · 本人与平均的差（绿 = 高于平均，红 = 低于） */
+.bc-class-badge {
+  position: absolute; right: 6px; bottom: 6px; z-index: 3;
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(0, 0, 0, .55); color: #fff;
+  padding: 3px 8px; border-radius: 12px;
+  font-size: 11px; font-weight: 700; line-height: 1.2;
+  backdrop-filter: blur(2px); cursor: help;
+}
+.bc-class-lbl { opacity: .75; font-weight: 600; }
+.bc-class-mean { opacity: .85; font-weight: 600; }
+.bc-class-diff { padding: 0 5px; border-radius: 8px; background: rgba(255, 255, 255, .2); }
+.bc-class-above .bc-class-diff { background: #2f9e44; }
+.bc-class-below .bc-class-diff { background: #e03131; }
+
+/* ---- 卡片右边的成绩小框（总评 / GPA / 班级均分 / Section）----
+ * 挂在卡片里、绝对定位到卡片右侧；卡片本身留出右边距给它。配色走主题导出的 --bc-ai-* 令牌，各预设主题自动跟随 */
+.ic-DashboardCard.bc-has-side { position: relative !important; overflow: visible !important; margin-right: 134px !important; }
+.bc-side {
+  position: absolute; left: calc(100% + 10px); top: 0; width: 112px; z-index: 2; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 9px; background: var(--bc-ai-bg, #fff); color: var(--bc-ai-text, #222);
+  border: 1px solid var(--bc-ai-border, #dfe3e8); border-radius: var(--bc-ai-radius, 10px);
+  box-shadow: var(--bc-ai-shadow, 0 2px 8px rgba(0, 0, 0, .08)); font-family: var(--bc-ai-font, inherit);
+  font-size: 12px; line-height: 1.25;
+}
+.bc-side-row { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.bc-side-lbl { font-size: 10px; font-weight: 600; color: var(--bc-ai-muted, #888); letter-spacing: .02em; }
+.bc-side-val { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-side-val small { font-size: 11px; font-weight: 600; opacity: .8; margin-left: 3px; }
+.bc-side-sub { font-size: 10px; color: var(--bc-ai-muted, #888); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-side-diff { display: inline-block; padding: 0 4px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #fff; margin-left: 3px; vertical-align: 1px; }
+.bc-side-diff.bc-up { background: #2f9e44; }
+.bc-side-diff.bc-down { background: #e03131; }
+.bc-side-empty { opacity: .45; }
+@media (max-width: 700px) {   /* 窄屏没地方放：退回卡片下方 */
+  .ic-DashboardCard.bc-has-side { margin-right: 0 !important; margin-bottom: 70px !important; }
+  .bc-side { left: 0; top: calc(100% + 6px); width: 100%; flex-direction: row; justify-content: space-between; }
+}
 
 /* ---- 卡片消息铃铛 ---- */
 .bc-bell {
@@ -124,20 +163,61 @@ html.bc-fx-active #content, html.bc-fx-active #content-wrapper, html.bc-fx-activ
   display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 14px; margin: 8px 0 20px;
 }
+/* 浅色默认：面板用微灰底 + 细边，不用纯白大面积发光；预设主题各自用 !important 覆盖 */
 .bc-block {
-  background: #fff; border-radius: 10px; padding: 14px 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .08); margin-bottom: 14px;
+  background: #f5f6f8; border-radius: 10px; padding: 14px 16px;
+  border: 1px solid #e3e6ea; box-shadow: 0 1px 3px rgba(0, 0, 0, .05); margin-bottom: 14px;
 }
 .bc-block-title {
   font-weight: 800; font-size: 15px; margin-bottom: 10px;
   display: flex; align-items: center; gap: 8px;
 }
 .bc-pill { background: #e7f0ff; color: #1c54b2; font-size: 12px; border-radius: 10px; padding: 1px 8px; font-weight: 700; }
-.bc-block-body { font-size: 13px; color: #333; }
+.bc-block-body { font-size: 13px; color: #3a3f47; }
+
+/* ---- 加载骨架（面板 / 右侧栏卡 / 卡片成绩小框）----
+ * 用中性灰的半透明渐变，深浅主题都能看见；背景位置左右扫一遍做微光 */
+.bc-skel { display: flex; flex-direction: column; gap: 9px; padding: 4px 0; }
+.bc-skel-line {
+  display: block; height: 12px; border-radius: 6px; width: 100%;
+  background: linear-gradient(90deg, rgba(127, 127, 127, .15) 25%, rgba(127, 127, 127, .3) 37%, rgba(127, 127, 127, .15) 63%);
+  background-size: 400% 100%;
+  animation: bc-shimmer 1.4s ease-in-out infinite;
+}
+.bc-skel-line.w40 { width: 40%; }
+.bc-skel-line.w60 { width: 60%; }
+.bc-skel-line.w75 { width: 75%; }
+.bc-skel-line.w90 { width: 90%; }
+.bc-skel-row { display: flex; gap: 8px; }
+.bc-skel-pill { flex: 1 1 0; height: 18px; border-radius: 9px; max-width: 120px; }
+.bc-sbg-skel .bc-skel { padding: 6px 0 2px; }
+/* 成绩小框里的骨架条：行内、对齐数值高度 */
+.bc-side-val .bc-skel-line { display: inline-block; vertical-align: middle; height: 11px; width: 44px; }
+.bc-side-sub:empty { display: none; }
+@keyframes bc-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bc-skel-line { animation: none; background: rgba(127, 127, 127, .2); }
+}
 .bc-list { list-style: none; margin: 0; padding: 0; }
-.bc-list li { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; border-bottom: 1px dashed #eee; }
+.bc-list li { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; border-bottom: 1px dashed #dde1e6; }
 .bc-list li a { flex: 1; text-decoration: none; }
 .bc-list li.bc-urgent .bc-when { color: #e03131; font-weight: 700; }
+/* 本周截止：临期分级高亮（整行底色 + 左侧色条） */
+.bc-list li.bc-due-today, .bc-list li.bc-due-soon, .bc-list li.bc-due-near {
+  margin: 2px -6px; padding-left: 8px; padding-right: 6px; border-radius: 6px; border-left: 4px solid transparent; border-bottom-color: transparent;
+}
+.bc-list li.bc-due-today { background: #ffe3e3; border-left-color: #e03131; }
+.bc-list li.bc-due-today a { color: #c92a2a; font-weight: 800; }
+.bc-list li.bc-due-today .bc-when { color: #c92a2a; }
+.bc-list li.bc-due-soon { background: #fff1e0; border-left-color: #f08c00; }
+.bc-list li.bc-due-soon a { font-weight: 700; }
+.bc-list li.bc-due-soon .bc-when { color: #d9480f; font-weight: 700; }
+.bc-list li.bc-due-near { background: #fff9db; border-left-color: #f5c400; }
+.bc-list li.bc-due-near .bc-when { color: #a07800; font-weight: 700; }
+.bc-due-flag { flex: 0 0 auto; color: #e03131; font-weight: 900; }
 .bc-when { font-size: 12px; color: #888; white-space: nowrap; }
 .bc-exam-type { font-size: 11px; background: #f3e8ff; color: #6741d9; border-radius: 4px; padding: 1px 6px; font-weight: 700; }
 .bc-gpa-num { font-size: 38px; font-weight: 800; color: #1c7ed6; line-height: 1; }
@@ -151,9 +231,9 @@ html.bc-fx-active #content, html.bc-fx-active #content-wrapper, html.bc-fx-activ
 .bc-exam-legend-item { display: inline-flex; align-items: center; gap: 5px; text-decoration: none; color: #555; font-weight: 600; }
 .bc-exam-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bc-cc, #888); flex: 0 0 auto; }
 .bc-exam-groups { display: flex; gap: 12px; align-items: stretch; overflow-x: auto; padding-bottom: 4px; }
-.bc-exam-group { flex: 1 1 0; min-width: 190px; background: rgba(0, 0, 0, .03); border-radius: 8px; padding: 8px 10px; }
+.bc-exam-group { flex: 1 1 0; min-width: 190px; background: #eaedf1; border-radius: 8px; padding: 8px 10px; }
 .bc-exam-group-empty { opacity: .55; }
-.bc-exam-group-hd { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 6px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 2px solid #ddd; }
+.bc-exam-group-hd { font-weight: 800; font-size: 13px; color: #3a3f47; display: flex; align-items: center; gap: 6px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 2px solid #d5d9df; }
 .bc-exam-group-week .bc-exam-group-hd { border-bottom-color: #e03131; }
 .bc-exam-group-two .bc-exam-group-hd { border-bottom-color: #f08c00; }
 .bc-exam-group-month .bc-exam-group-hd { border-bottom-color: #1c7ed6; }
@@ -162,12 +242,12 @@ html.bc-fx-active #content, html.bc-fx-active #content-wrapper, html.bc-fx-activ
 .bc-exam-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .bc-exam-item {
   display: flex; flex-direction: column; gap: 3px; padding: 6px 8px 6px 10px;
-  border-left: 4px solid var(--bc-cc, #888); border-radius: 6px; background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+  border-left: 4px solid var(--bc-cc, #888); border-radius: 6px; background: #f7f8fa;
+  border: 1px solid #e3e6ea; border-left-width: 4px; box-shadow: none;
 }
 .bc-exam-item-hd { display: flex; align-items: center; gap: 6px; }
 .bc-exam-course-tag {
-  font-size: 11px; font-weight: 700; color: #fff; background: var(--bc-cc, #888);
+  font-size: 11px; font-weight: 700; color: #fff; background: var(--bc-cc, #888); opacity: .88;
   border-radius: 4px; padding: 1px 6px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .bc-exam-days { margin-left: auto; font-size: 12px; font-weight: 700; color: #666; white-space: nowrap; }
@@ -216,6 +296,11 @@ html.bc-idle *, html.bc-idle *::before, html.bc-idle *::after { animation-play-s
   box-shadow: var(--bc-ai-btn-shadow, 0 4px 14px rgba(0, 0, 0, .25));
 }
 #bc-study-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+#bc-study-btn { position: fixed; }
+.bc-study-badge {
+  position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: #e03131; color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; box-shadow: 0 1px 4px rgba(0, 0, 0, .3);
+}
 #bc-study {
   position: fixed; top: 0; right: 0; bottom: 0; width: 440px; max-width: 100vw; z-index: 2147483000; display: flex; flex-direction: column;
   background: var(--bc-ai-bg, #fff); color: var(--bc-ai-text, #222); border-left: var(--bc-ai-border, 1px solid #ddd);
@@ -322,8 +407,16 @@ html.bc-idle *, html.bc-idle *::before, html.bc-idle *::after { animation-play-s
 
 /* 最新消息 block：占两列宽，左右两栏 */
 #bc-blocks .bc-block[data-block="latest"] { grid-column: span 2; }
-.bc-latest-term { margin-left: auto; font-size: 11px; color: #999; font-weight: 600; }
-.bc-latest-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 18px; }
+/* 标题右侧：学期标签 + 排序下拉 + 课程下拉 */
+.bc-latest-ctl { margin-left: auto; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bc-latest-term { font-size: 11px; color: #999; font-weight: 600; }
+.bc-latest-ctl select {
+  font-size: 11px; font-weight: 600; color: #555; background: #fff; border: 1px solid #d5d5d5; border-radius: 6px;
+  padding: 2px 4px; max-width: 150px; text-overflow: ellipsis; cursor: pointer; font-family: inherit;
+}
+/* 两列、按行流动：第 1 条左上、第 2 条右上、第 3 条第二行左……（写死 row，防止主题或 Canvas 样式改成按列） */
+.bc-latest-list { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row !important; gap: 0 18px; }
+.bc-latest-list li.bc-latest-row { float: none !important; width: auto !important; }
 .bc-latest-list li.bc-latest-row { display: block; padding: 4px 0 4px 8px; min-width: 0; border-left: 3px solid var(--bc-rule, #e5e5e5); }
 .bc-latest-hd { display: flex; align-items: baseline; gap: 6px; font-size: 11px; white-space: nowrap; overflow: hidden; }
 .bc-latest-kind { flex: 0 0 auto; background: #eef1f5; color: #555; border-radius: 3px; padding: 0 5px; font-weight: 700; }
@@ -519,3 +612,16 @@ html.bc-hide-feedback #right-side .recent_feedback_header { display: none !impor
 #bc-study .bc-math-block { display: block; margin: 4px 0; padding: 4px 8px; background: rgba(0, 0, 0, .04); border-radius: 6px; text-align: center; font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; }
 #bc-study .bc-study-status { color: #1c7ed6; }
 #bc-study .bc-study-status.bc-ai-err { color: #e03131; }
+
+/* ====== 学习抽屉：知识库标签（study.js _tabKb；检索见 knowledge.js） ====== */
+.bc-study-tabs { flex-wrap: wrap; }
+.bc-study-kbstat { margin-left: auto; }
+.bc-study-kbanswer { max-height: 320px; }
+.bc-study-kbfiles { max-height: 220px; overflow: auto; border: 1px solid #e5e9f0; border-radius: 8px; padding: 6px 8px; background: #f7f9fc; }
+.bc-study-kbfiles label { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 0; cursor: pointer; }
+.bc-study-kbfname { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-study-kbtitle { flex: 1; min-width: 0; }
+.bc-study-kbpaste { width: 100%; min-height: 110px; border: 1px solid #ccc; border-radius: 8px; padding: 6px 8px; font-size: 12px; resize: vertical; margin: 4px 0; box-sizing: border-box; }
+.bc-study-kbclear { margin-left: 8px; text-transform: none; }
+#bc-study .bc-ai-srcs { font-size: 11px; color: #777; margin: -4px 0 8px; line-height: 1.7; }
+#bc-study .bc-ai-src { display: inline-block; background: #eef3ff; border-radius: 4px; padding: 0 5px; margin: 1px 2px 1px 0; }

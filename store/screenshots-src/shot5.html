@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Modules</title>
+<link rel="stylesheet" href="canvas-frame.css">
+<link rel="stylesheet" href="../../styles/inject.css">
+<style>
+  #main { height: 752px; }
+  #not_right_side { padding: 0 24px; }
+  #content h1.title { margin-bottom: 0; }
+  #bc-study .bc-study-rate button { flex: 1; }
+  #bc-study .bc-study-tabs button.bc-study-active { background: var(--bc-ai-accent, #eef3ff); color: var(--bc-ai-accent-text, #1c54b2); }
+</style>
+</head>
+<body class="ic-app">
+
+<header id="header" class="ic-app-header">
+  <div class="ic-app-header__logomark-container">
+    <svg class="ic-app-header__logomark" viewBox="0 0 48 48"><path fill="#fff" d="M24 8 4 17l20 9 20-9-20-9zm-12 14.6V31c0 3.3 5.4 6 12 6s12-2.7 12-6v-8.4l-12 5.4-12-5.4zM42 19.5v10h2v-10h-2z"/></svg>
+  </div>
+  <nav class="ic-app-header__main-navigation">
+    <ul class="ic-app-header__menu-list">
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><span class="ic-avatar"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2c-4.4 0-9 2.2-9 5.5V22h18v-2.5c0-3.3-4.6-5.5-9-5.5z"/></svg></span><span class="menu-item__text">Account</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M12 3a10 10 0 0 0-8.66 15h17.32A10 10 0 0 0 12 3zm0 2a8 8 0 0 1 6.93 12H5.07A8 8 0 0 1 12 5zm-.7 9.3 5.9-7.2-7.3 5.8a1 1 0 1 0 1.4 1.4z"/></svg><span class="menu-item__text">Dashboard</span></a></li>
+      <li class="ic-app-header__menu-list-item ic-app-header__menu-list-item--active"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M5 2h11a3 3 0 0 1 3 3v17H8a3 3 0 0 1-3-3V2zm2 2v13a1 1 0 0 0 1 1h9V5a1 1 0 0 0-1-1H7zm2 3h6v2H9V7zm0 4h6v2H9v-2z"/></svg><span class="menu-item__text">Courses</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2zM5 9v11h14V9H5zm2 2h3v3H7v-3zm5 0h3v3h-3v-3z"/></svg><span class="menu-item__text">Calendar</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2.2V17h16V7.2l-8 5.3-8-5.3zM5.6 7l6.4 4.3L18.4 7H5.6z"/></svg><span class="menu-item__text">Inbox</span><span class="menu-item__badge">4</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm-1 3h2v5.6l3.5 2-1 1.7L11 13.2V7z"/></svg><span class="menu-item__text">History</span></a></li>
+      <li class="ic-app-header__menu-list-item"><a class="ic-app-header__menu-list-link" href="#"><svg class="ic-icon-svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm-1.2 11h2.4v2.2h-2.4V15zm1.2-8.4c-2.2 0-3.7 1.3-3.8 3.3h2.2c.1-.8.6-1.3 1.6-1.3.9 0 1.4.5 1.4 1.2 0 .6-.3.9-1.2 1.5-1.1.7-1.5 1.3-1.5 2.4v.3h2.2v-.2c0-.6.3-.9 1.2-1.5 1.1-.7 1.7-1.4 1.7-2.6 0-1.9-1.5-3.1-3.8-3.1z"/></svg><span class="menu-item__text">Help</span></a></li>
+    </ul>
+  </nav>
+</header>
+
+<div id="wrapper">
+  <div class="ic-app-nav-toggle-and-crumbs">
+    <span class="ic-app-course-nav-toggle"><i></i><i></i><i></i></span>
+    <nav id="breadcrumbs"><ul>
+      <li><a href="#">F26 INTRO TO DATA SCIENCE 01:198:210:02</a></li>
+      <li><span>Modules</span></li>
+    </ul></nav>
+  </div>
+
+  <div id="main">
+    <div id="left-side">
+      <ul id="section-tabs">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Announcements</a></li>
+        <li><a href="#">Syllabus</a></li>
+        <li><a href="#" class="active">Modules</a></li>
+        <li><a href="#">Assignments</a></li>
+        <li><a href="#">Grades</a></li>
+        <li><a href="#">Discussions</a></li>
+        <li><a href="#">Quizzes</a></li>
+        <li><a href="#">People</a></li>
+        <li><a href="#">Files</a></li>
+        <li><a href="#">Pages</a></li>
+        <li><a href="#">Zoom</a></li>
+        <li><a href="#">Gradescope</a></li>
+      </ul>
+    </div>
+
+    <div id="not_right_side">
+      <div id="content">
+        <div class="header-bar">
+          <h1 class="title">Modules</h1>
+          <div><a class="btn" href="#">Collapse All</a><a class="btn" href="#">View Progress</a></div>
+        </div>
+
+        <div class="context_module">
+          <div class="ig-header"><span class="caret"></span><span class="name">Week 1 · Introduction &amp; Python refresher</span><span style="font-size:12px;color:#6B7780">Complete All Items</span><svg class="kebab" viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></div>
+          <ul class="ig-list">
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5V3zm2 2v14h10V5H7zm2 3h6v2H9V8zm0 4h6v2H9v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Lecture 1 slides: What is data science?</a><div class="ig-details">Viewed</div></div><span class="ig-admin"><svg viewBox="0 0 24 24" class="done" style="fill:#0B874B"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span></li>
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6V2zm7 1.5V8h4.5L13 3.5zM8 11h8v2H8v-2zm0 4h8v2H8v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Lab 1: Jupyter setup and Python warm-up</a><div class="ig-details">Sep 5 | 10 pts | Submitted</div></div><span class="ig-admin"><svg viewBox="0 0 24 24" style="fill:#0B874B"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span></li>
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M4 4h16v12H4V4zm2 2v8h12V6H6zm5 12h2v2h-2v-2zm-4 0h2v2H7v-2zm8 0h2v2h-2v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Quiz 0: Syllabus check</a><div class="ig-details">Sep 6 | 5 pts | Score: 5</div></div><span class="ig-admin"><svg viewBox="0 0 24 24" style="fill:#0B874B"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span></li>
+          </ul>
+        </div>
+
+        <div class="context_module">
+          <div class="ig-header"><span class="caret"></span><span class="name">Week 2 · Data wrangling with pandas</span><span style="font-size:12px;color:#6B7780">Complete All Items</span><svg class="kebab" viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></div>
+          <ul class="ig-list">
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5V3zm2 2v14h10V5H7zm2 3h6v2H9V8zm0 4h6v2H9v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Lecture 2 slides: Series, DataFrames and indexing</a><div class="ig-details">Viewed</div></div><span class="ig-admin"><svg viewBox="0 0 24 24" style="fill:#0B874B"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span></li>
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h5v2H8v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">pandas_cheatsheet.pdf</a><div class="ig-details">Viewed</div></div><span class="ig-admin"><svg viewBox="0 0 24 24" style="fill:#0B874B"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span></li>
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6V2zm7 1.5V8h4.5L13 3.5zM8 11h8v2H8v-2zm0 4h8v2H8v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Lab 2: Cleaning the NYC taxi sample</a><div class="ig-details">Sep 12 | 10 pts | Must submit the assignment</div></div><span class="ig-admin"></span></li>
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8l-6 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v10h4v2.3L11.4 15H20V5H4z"/></svg><div class="ig-info"><a class="ig-title" href="#">Discussion: A messy dataset you have met</a><div class="ig-details">Sep 14 | 5 pts | Must contribute to the page</div></div><span class="ig-admin"></span></li>
+          </ul>
+        </div>
+
+        <div class="context_module">
+          <div class="ig-header"><span class="caret"></span><span class="name">Week 3 · Exploratory data analysis</span><span style="font-size:12px;color:#6B7780">Complete All Items</span><svg class="kebab" viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></div>
+          <ul class="ig-list">
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5V3zm2 2v14h10V5H7zm2 3h6v2H9V8zm0 4h6v2H9v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Lecture 3 slides: Distributions and summary statistics</a><div class="ig-details">Must view the page</div></div><span class="ig-admin"></span></li>
+            <li class="ig-row"><svg class="ig-type-icon" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6V2zm7 1.5V8h4.5L13 3.5zM8 11h8v2H8v-2zm0 4h8v2H8v-2z"/></svg><div class="ig-info"><a class="ig-title" href="#">Lab 3: Plotting with matplotlib</a><div class="ig-details">Sep 19 | 10 pts | Must submit the assignment</div></div><span class="ig-admin"></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="bc-study">
+  <div class="bc-study-head">
+    <span class="bc-study-title">📖 Study tools</span>
+    <span class="bc-study-ctx">INTRO TO DATA SCIENCE</span>
+    <button type="button" class="bc-study-close">✕</button>
+  </div>
+  <div class="bc-study-tabs">
+    <button data-tab="chat">💬 Page chat</button>
+    <button data-tab="kb">🧠 Knowledge base</button>
+    <button data-tab="cards" class="bc-study-active">🃏 Flashcards</button>
+    <button data-tab="quiz">📝 Practice</button>
+    <button data-tab="files">📁 Files</button>
+    <button data-tab="bank" title="Open question bank">📚 Question bank</button>
+  </div>
+  <div class="bc-study-body">
+    <div class="bc-study-sub">Week 2 · pandas basics · 3 / 12 · Box 2</div>
+    <div class="bc-study-card bc-study-flipped">
+      <div class="bc-study-card-q">In pandas, what is the difference between .loc[] and .iloc[]?</div>
+      <div class="bc-study-card-a">.loc[] selects rows and columns by label (index names, column names or a boolean mask); .iloc[] selects by integer position. Both accept slices, but a .loc slice includes the end label while an .iloc slice excludes the end position.</div>
+    </div>
+    <div class="bc-study-row bc-study-rate">
+      <button type="button" data-r="again">😵 Forgot</button><button type="button" data-r="hard">😐 Fuzzy</button>
+      <button type="button" data-r="good">🙂 Got it</button><button type="button" data-r="easy">😎 Too easy</button>
+    </div>
+    <div class="bc-study-row"><button type="button" class="bc-study-back">Back to decks</button></div>
+  </div>
+  <div class="bc-study-status"></div>
+</div>
+
+<button id="bc-study-btn" title="Study tools: page chat / flashcards / practice">📖</button>
+<button id="bc-gear" title="PotatoCanvas Settings">⚙</button>
+
+</body>
+</html>

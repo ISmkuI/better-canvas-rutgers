@@ -3,25 +3,101 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { width: 260px; margin: 0; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+    body { width: 290px; margin: 0; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+    [hidden] { display: none !important; }
     .head { background: #cc0033; color: #fff; padding: 12px 14px; font-weight: 700; }
-    .body { padding: 10px 14px; }
-    .row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-    .row input { width: 18px; height: 18px; }
-    .note { font-size: 12px; color: #888; margin: 10px 0; line-height: 1.5; }
+    .tabs { display: flex; border-bottom: 1px solid #eee; background: #fff; position: sticky; top: 0; z-index: 1; }
+    .tabs button { flex: 1; margin: 0; padding: 9px 0; border: none; border-radius: 0; background: #fff; color: #666; font-size: 13px; font-weight: 700; border-bottom: 2px solid transparent; }
+    .tabs button.active { color: #cc0033; border-bottom-color: #cc0033; }
+    .body { padding: 6px 14px 10px; max-height: 520px; overflow: auto; }
+    .sec { font-size: 12px; font-weight: 700; color: #cc0033; margin: 12px 0 2px; }
+    .row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; gap: 8px; }
+    .row input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+    .row input[type=number] { width: 64px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; text-align: right; }
+    .row.sub { padding-left: 14px; color: #666; font-size: 12px; }
+    .note { font-size: 12px; color: #888; margin: 8px 0; line-height: 1.5; }
+    .note.err { color: #c62828; }
+    .btns { display: flex; gap: 6px; margin-top: 8px; }
     button { width: 100%; padding: 8px; border: 1px solid #ddd; background: #f7f7f7; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 6px; }
+    .btns button { margin-top: 0; }
+    button.primary { background: #cc0033; color: #fff; border-color: #cc0033; }
+    button:disabled { opacity: .6; cursor: default; }
+    button.inline { width: auto; margin: 0 0 0 6px; padding: 1px 6px; font-size: 11px; }
+    #rx-status { min-height: 16px; margin: 6px 0 0; }
+    #rx-status.err { color: #c62828; }
+    #rx-status.ok { color: #2e7d32; }
+    #rx-log { font-size: 11px; color: #666; margin-top: 4px; }
+    #rx-log summary { cursor: pointer; }
+    #rx-log summary button { width: auto; margin: 0 0 0 6px; padding: 1px 6px; font-size: 11px; }
+    #rx-log pre { max-height: 140px; overflow: auto; background: #f5f5f5; padding: 6px; border-radius: 6px; white-space: pre-wrap; word-break: break-all; margin: 4px 0 0; }
+    /* 解锁卡片 */
+    .lock { border: 1px solid #eee; border-radius: 10px; padding: 12px; margin: 10px 0; background: #fafafa; }
+    .lock h3 { margin: 0 0 6px; font-size: 14px; }
+    .lock .note { margin: 0 0 8px; }
+    .lock .in { display: flex; gap: 6px; }
+    .lock .in input { flex: 1; min-width: 0; padding: 7px 8px; border: 1px solid #ddd; border-radius: 8px; font: 14px ui-monospace, Consolas, monospace; letter-spacing: 1px; text-transform: uppercase; }
+    .lock .in button { width: auto; margin: 0; padding: 7px 12px; }
+    .code { font: 700 22px ui-monospace, Consolas, monospace; letter-spacing: 2px; text-align: center; background: #fff; border: 1px dashed #cc0033; border-radius: 8px; padding: 10px; margin: 8px 0 4px; user-select: all; }
+    .foot { font-size: 12px; color: #888; margin: 10px 0 0; text-align: center; }
   </style>
 </head>
 <body>
-  <div class="head">Better Canvas</div>
-  <div class="body">
-    <div class="row"><span>主题美化</span><input type="checkbox" data-path="theme.enabled"></div>
-    <div class="row"><span>卡片成绩</span><input type="checkbox" data-path="cards.showGrade"></div>
-    <div class="row"><span>自定义面板</span><input type="checkbox" data-path="blocks.enabled"></div>
-    <div class="row"><span>消息铃铛</span><input type="checkbox" data-path="messages.enabled"></div>
-    <p class="note">完整设置（颜色、背景、关键词、期中期末）：在 Canvas 页面点右下角 ⚙ 按钮。</p>
-    <button id="clear">清除数据缓存（重新拉取成绩/消息）</button>
+  <div class="head">PotatoCanvas</div>
+  <div class="tabs">
+    <button type="button" class="active" data-tab="main" data-i18n="常用">常用</button>
+    <button type="button" data-tab="adv" data-i18n="🔒 高级功能">🔒 高级功能</button>
   </div>
+  <div class="body">
+    <!-- 常用 -->
+    <div id="pane-main">
+      <div class="row"><span data-i18n="主题美化">主题美化</span><input type="checkbox" data-path="theme.enabled"></div>
+      <div class="row"><span data-i18n="卡片成绩">卡片成绩</span><input type="checkbox" data-path="cards.showGrade"></div>
+      <div class="row"><span data-i18n="自定义面板">自定义面板</span><input type="checkbox" data-path="blocks.enabled"></div>
+      <div class="row"><span data-i18n="消息铃铛">消息铃铛</span><input type="checkbox" data-path="messages.enabled"></div>
+      <p class="note" data-i18n="完整设置（颜色、背景、关键词、期中期末）：在 Canvas 页面点右下角 ⚙ 按钮。">完整设置（颜色、背景、关键词、期中期末）：在 Canvas 页面点右下角 ⚙ 按钮。</p>
+
+      <div class="sec" data-i18n="✨ 学习助手">✨ 学习助手</div>
+      <div class="row"><span data-i18n="在所有网站启用助手（双击 / 选中 / 右键 / 快捷键 / 📖）">在所有网站启用助手（双击 / 选中 / 右键 / 快捷键 / 📖）</span><input type="checkbox" id="everywhere"></div>
+      <p class="note" id="ev-note" data-i18n="开启后会申请「访问所有网站」权限；Canvas 之外的页面只加载助手浮窗、题库和学习工具（页面对话 / 闪卡 / 练习），不加载 Canvas 专用功能。">开启后会申请「访问所有网站」权限；Canvas 之外的页面只加载助手浮窗、题库和学习工具（页面对话 / 闪卡 / 练习），不加载 Canvas 专用功能。</p>
+
+      <button id="clear" data-i18n="清除数据缓存（重新拉取成绩/消息）">清除数据缓存（重新拉取成绩/消息）</button>
+    </div>
+
+    <!-- 高级功能（需解锁） -->
+    <div id="pane-adv" hidden>
+      <p class="note" data-i18n="这些功能与 Canvas 无关且依赖网站权限，默认锁定。">这些功能与 Canvas 无关且依赖网站权限，默认锁定。</p>
+
+      <div id="adv-lock" hidden></div>
+
+      <div id="adv-features" hidden>
+        <div class="sec" data-i18n="🎬 讲座视频">🎬 讲座视频</div>
+        <div class="row"><span data-i18n="🎬 讲座视频下载 / 转写标签">🎬 讲座视频下载 / 转写标签</span><input type="checkbox" data-path="advanced.videos"></div>
+
+        <div class="sec" data-i18n="📕 阅读器导出（eText / Revel / EPUB 网页书）">📕 阅读器导出（eText / Revel / EPUB 网页书）</div>
+        <div class="row"><span data-i18n="清理界面（去掉工具栏、浮层）">清理界面（去掉工具栏、浮层）</span><input type="checkbox" data-path="readerExport.cleanUI"></div>
+        <div class="row"><span data-i18n="破解打印限制（剔除 @media print）">破解打印限制（剔除 @media print）</span><input type="checkbox" data-path="readerExport.breakPrint"></div>
+        <div class="row"><span data-i18n="强制懒加载（自动滚动）">强制懒加载（自动滚动）</span><input type="checkbox" data-path="readerExport.forceLazy"></div>
+        <div class="row sub"><span data-i18n="每步滚动间隔（毫秒）">每步滚动间隔（毫秒）</span><input type="number" min="20" max="3000" step="10" data-path="readerExport.scrollInterval"></div>
+        <div class="row"><span data-i18n="连续导出（自动翻页到书末）">连续导出（自动翻页到书末）</span><input type="checkbox" data-path="readerExport.continuous"></div>
+        <div class="row sub"><span data-i18n="最多导出节数">最多导出节数</span><input type="number" min="1" max="2000" step="1" data-path="readerExport.maxPages"></div>
+        <div class="row sub"><span data-i18n="每节之间停顿（毫秒，防限流）">每节之间停顿（毫秒，防限流）</span><input type="number" min="0" max="60000" step="100" data-path="readerExport.pageDelay"></div>
+        <div class="btns">
+          <button id="rx-pdf" class="primary" data-i18n="🖨 打印为 PDF">🖨 打印为 PDF</button>
+          <button id="rx-md" data-i18n="⬇ 下载 Markdown">⬇ 下载 Markdown</button>
+        </div>
+        <p class="note" id="rx-status"></p>
+        <details id="rx-log" hidden>
+          <summary><span data-i18n="导出日志">导出日志</span> <button type="button" id="rx-log-copy" data-i18n="复制">复制</button></summary>
+          <pre id="rx-log-pre"></pre>
+        </details>
+        <p class="note" data-i18n="在打开教材阅读器的标签页上点按钮。第一次会请求访问阅读器所在网站的权限。连续导出会自动点「下一页」，期间别动那个标签页。">在打开教材阅读器的标签页上点按钮。第一次会请求访问阅读器所在网站的权限。连续导出会自动点「下一页」，期间别动那个标签页。</p>
+
+        <p class="foot"><span data-i18n="✅ 本机已绑定 ·">✅ 本机已绑定 ·</span> <button type="button" class="inline" id="gate-unbind" data-i18n="解除绑定">解除绑定</button></p>
+      </div>
+    </div>
+  </div>
+  <script src="../src/i18n.js"></script>
+  <script src="../src/gate.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

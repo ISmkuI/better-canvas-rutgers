@@ -1,0 +1,5 @@
+*.instructure.com: the Canvas site this extension enhances. Content scripts restyle the dashboard and read the logged-in student's own courses, grades, class statistics, planner items, announcements, inbox and course files via the Canvas REST API to show grade badges, dashboard panels, exam countdowns and a message bell. Wildcard needed because New Quizzes and file previews load from other instructure.com subdomains.
+
+*.gradescope.com: optional grade sync. Reads the user's own Gradescope scores (existing session) and fills them into what-if grades on the Canvas Grades page. Existing grades are never changed; nothing leaves the browser.
+
+AI endpoints (anthropic, openai, googleapis, deepseek, moonshot, dashscope, bigmodel, x.ai, groq, openrouter): the optional study assistant sends text the user explicitly asks about to the one provider the user chose, with the user's own API key. Cross-origin calls must come from the background worker, hence host permission. No developer server.

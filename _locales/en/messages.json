@@ -1,0 +1,11 @@
+{
+  "extDescription": {
+    "message": "PotatoCanvas: a heartier Canvas LMS. Grades on cards, exam countdowns, due dates, message alerts, themes, and a study helper."
+  },
+  "cmdAsk": {
+    "message": "Study assistant: open the explanation popup with the selected text (forwarded to the current tab)"
+  },
+  "actionTitle": {
+    "message": "PotatoCanvas settings"
+  }
+}

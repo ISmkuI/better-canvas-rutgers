@@ -1,5 +1,11 @@
 /* 首页课程卡片按 Rutgers 科目代码分组。
  * 课号格式 学院:科目:课程:段（01:198:205:05）或 科目:课程（198:112）；中间/前面的 3 位是科目。 */
+// 英文词条：分组标题（"其他" 是内部分组键，显示时经 label() 翻译）
+BC.i18n.add({
+  "其他": "Other",
+  "其他课程": "Other courses",
+  "{sub} 类": "Subject {sub}"
+});
 BC.groups = {
   // 常见 Rutgers 科目代码 -> 名称（可继续补充；未知时只显示代码）
   SUBJECTS: {
@@ -33,9 +39,9 @@ BC.groups = {
   },
 
   label(sub) {
-    if (sub === "其他") return "其他课程";
+    if (sub === "其他") return BC.t("其他课程");
     const name = BC.groups.SUBJECTS[sub];
-    return name ? `${sub} · ${name}` : `${sub} 类`;
+    return name ? `${sub} · ${name}` : BC.t("{sub} 类", { sub });
   },
 
   apply(settings) {

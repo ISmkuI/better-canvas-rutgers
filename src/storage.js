@@ -1,9 +1,25 @@
-/* Better Canvas - 全局命名空间 / 工具函数 / 设置存储 / 缓存
+/* PotatoCanvas - 全局命名空间 / 工具函数 / 设置存储 / 缓存
  * 所有模块挂在 window.BC 下；多个 content script 共享同一 isolated world。 */
 window.BC = window.BC || {};
 
+// 英文词条：importantRules 的分类名在 messages.js / blocks.js / settings-ui.js 里都会显示，词典放这里（最先加载）
+BC.i18n.add({
+  "测验/考试": "Quiz / Exam",
+  "教室变动": "Room change",
+  "时间/请假": "Schedule / Absence",
+  "截止日期": "Due date"
+});
+
 /* ----------------------- 默认设置 ----------------------- */
 BC.DEFAULTS = {
+  ui: {
+    lang: "auto"        // 界面语言：auto = 跟随浏览器 / 系统语言；zh | en 手动指定（见 i18n.js）
+  },
+  gradescope: {
+    enabled: true,      // Gradescope → Canvas 成绩同步（Grades 页按钮 + 自动填 what-if）
+    autoSync: true,     // 打开 Grades 页时自动同步；关掉后只有手动按钮
+    keepAlive: true     // 后台定时访问 gradescope.com 维持登录会话（首次在 gradescope.com 登录并勾选 Remember me 后）
+  },
   theme: {
     enabled: true,
     preset: "",         // 预设主题 id（见 themes.js），空=不用预设
@@ -18,8 +34,10 @@ BC.DEFAULTS = {
     cardStyle: "default" // default | flat | glass
   },
   cards: {
-    showGrade: true,    // 卡片右上角显示成绩
+    showGrade: true,    // 卡片显示成绩
+    layout: "side",     // 成绩怎么摆："side" = 卡片右边一个小框（总评 / GPA / 班级均分 / Section）；"badge" = 卡片头部角标
     showPoints: true,   // 同时显示 得分/总分
+    showClassRange: true, // 卡片头部右下角显示班级成绩范围（用作业的班级统计 + 分组权重算出的最低 / 平均 / 最高总评）
     groupBySubject: true // 按 Rutgers 科目代码分组卡片
   },
   blocks: {
@@ -31,6 +49,8 @@ BC.DEFAULTS = {
     todayPlaced: false,
     historyInSidebar: true,  // 历史课程放右侧栏底部（侧栏卡），而不是仪表盘整行
     latestCurrentTermOnly: true, // 「最新消息」只显示当前学期课程的消息
+    latestSort: "newest",        // 「最新消息」排序：newest | oldest | unread | important | course（面板标题右侧的下拉）
+    latestCourse: "",            // 「最新消息」只看某一门课（课程 id），空 = 全部
     visible: { dueThisWeek: true, gpa: true, examCountdown: true, absence: true, latest: true, today: true, history: true }
   },
   // 学习助手（assistant.js）：模型配置存本地，只从你的浏览器直连模型接口
@@ -42,7 +62,9 @@ BC.DEFAULTS = {
     model: "",            // 空 = 用该服务的默认模型
     apiKey: "",
     baseUrl: "",          // custom / 反代时填；OpenAI 兼容接口填到 /v1
-    lang: "zh"            // zh | en
+    lang: "auto",         // zh | en | auto（跟随界面语言，见 assistant.js）
+    autoDetectVideos: true, // 打开页面自动识别讲座视频（📖 按钮上挂数量角标）
+    everywhere: false      // 在所有网站启用助手 + 学习工具（需在工具栏弹窗里授权全站权限；background 动态注册 anywhere.js）
   },
   qbank: [],              // 题库：[{ id, ts, url, title, course, cid, question, answer, note, review }]
   flashcards: [],         // 闪卡卡组：[{ id, ts, title, course, cid, url, cards:[{ id, q, a, box, due, reviews }] }]
@@ -125,17 +147,34 @@ BC.util = {
     const m = String(code).match(/course_(\d+)/);
     return m ? m[1] : null;
   },
-  daysUntil(dateStr) {
+  // 解析日期：纯日期 "YYYY-MM-DD" 按本地时区当天 0 点（直接 new Date 会当成 UTC，美东时区会变成前一天）
+  parseDate(dateStr) {
     if (!dateStr) return null;
-    const d = new Date(dateStr);
-    if (isNaN(d)) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr).trim());
+    const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(dateStr);
+    return isNaN(d) ? null : d;
+  },
+  // 距今多少个日历日（今天 = 0，明天 = 1）；不按 24 小时算，否则同一天的中午和深夜会得到不同天数
+  daysUntil(dateStr) {
+    const d = BC.util.parseDate(dateStr);
+    if (!d) return null;
     const now = new Date();
-    return Math.ceil((d - now) / 86400000);
+    const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const b = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.round((a - b) / 86400000);
   },
   fmtDate(dateStr) {
-    const d = new Date(dateStr);
-    if (isNaN(d)) return dateStr;
-    return d.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+    const d = BC.util.parseDate(dateStr);
+    if (!d) return dateStr;
+    return d.toLocaleDateString(BC.i18n.locale(), { month: "short", day: "numeric" });
+  },
+  // 带时刻（用于有具体截止时间的作业）："9月10日 12:00"；纯日期不带时刻
+  fmtDateTime(dateStr) {
+    const d = BC.util.parseDate(dateStr);
+    if (!d) return dateStr;
+    const date = d.toLocaleDateString(BC.i18n.locale(), { month: "short", day: "numeric" });
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr).trim())) return date;
+    return date + " " + d.toLocaleTimeString(BC.i18n.locale(), { hour: "2-digit", minute: "2-digit", hour12: false });
   },
   // 等待元素出现
   waitFor(selector, { timeout = 15000, root = document } = {}) {

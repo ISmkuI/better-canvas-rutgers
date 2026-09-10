@@ -5,6 +5,16 @@
  * 流程：对象表 -> 页面字体 + ToUnicode -> 逐算符跑内容流（q/Q/cm/BT/Tm/Td/Tf/Tj/TJ）得到 {x,y,text}
  *      -> 用 Monday…Friday 表头的 x 划列 -> 每列按 y 排成行 -> 「时间段 / 课名 / 课号(学分) / 教室 校区」四段解析
  *      -> 用课号匹配 Canvas 课程 id -> 同课同时段同教室的合并 days。 */
+BC.i18n.add({
+  "没有找到 Monday…Friday 表头，这不像 WebReg 的课表 PDF": "Couldn't find the Monday…Friday header; this doesn't look like a WebReg schedule PDF",
+  "没能从 PDF 里读到文字。请在 WebReg 的 View / Print Schedule 页用浏览器“打印 → 另存为 PDF”。": "Couldn't read any text from the PDF. On WebReg's View / Print Schedule page, use the browser's \"Print → Save as PDF\".",
+  "没有解析到任何课程时段。请确认是 WebReg 的课表 PDF。": "No class time slots were found. Make sure this is a WebReg schedule PDF.",
+  "解析中…": "Parsing…",
+  "已导入 {n} 门课的时段": "Imported time slots for {n} courses",
+  "（{n} 条没匹配到 Canvas 课程，仍会显示）": " ({n} didn't match a Canvas course but will still be shown)",
+  "导入失败：": "Import failed: "
+});
+
 BC.webreg = {
   SCHEDULE_URL: "https://sims.rutgers.edu/webreg/viewSchedule.htm",
   DAY: { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 },
@@ -265,7 +275,7 @@ BC.webreg = {
     const CODE = /(\d{2}:\d{3}:\d{3}:[A-Z0-9]{1,3}):(\d{4,6})\s*\(([\d.]+)\)/;
     // 表头
     const heads = runs.filter(r => BC.webreg.DAY[r.text.trim().toLowerCase()] != null);
-    if (heads.length < 2) throw new Error("没有找到 Monday…Friday 表头，这不像 WebReg 的课表 PDF");
+    if (heads.length < 2) throw new Error(BC.t("没有找到 Monday…Friday 表头，这不像 WebReg 的课表 PDF"));
     // 只取同一行的表头（避免别处出现的星期词）
     const headY = heads.map(h => h.y).sort((a, b) => a - b)[Math.floor(heads.length / 2)];
     const cols = heads.filter(h => Math.abs(h.y - headY) < h.size).sort((a, b) => a.x - b.x)
@@ -354,9 +364,9 @@ BC.webreg = {
   // 文件 -> 写入 settings.schedule（替换旧的 webreg 条目，保留手填）
   async importFile(file) {
     const runs = await BC.webreg.textRuns(await file.arrayBuffer());
-    if (!runs.length) throw new Error("没能从 PDF 里读到文字。请在 WebReg 的 View / Print Schedule 页用浏览器“打印 → 另存为 PDF”。");
+    if (!runs.length) throw new Error(BC.t("没能从 PDF 里读到文字。请在 WebReg 的 View / Print Schedule 页用浏览器“打印 → 另存为 PDF”。"));
     const parsed = BC.webreg.parseRuns(runs);
-    if (!parsed.length) throw new Error("没有解析到任何课程时段。请确认是 WebReg 的课表 PDF。");
+    if (!parsed.length) throw new Error(BC.t("没有解析到任何课程时段。请确认是 WebReg 的课表 PDF。"));
     let scores = {};
     try { scores = await BC.grades.fetchScores(); } catch (e) {}
     const merged = BC.webreg.merge(parsed, scores);
@@ -379,13 +389,14 @@ BC.webreg = {
       const f = inp.files && inp.files[0];
       inp.remove();
       if (!f) return;
-      status && status("解析中…");
+      status && status(BC.t("解析中…"));
       try {
         const r = await BC.webreg.importFile(f);
-        status && status(`已导入 ${r.count} 门课的时段${r.matched < r.count ? `（${r.count - r.matched} 条没匹配到 Canvas 课程，仍会显示）` : ""}`);
+        status && status(BC.t("已导入 {n} 门课的时段", { n: r.count }) +
+          (r.matched < r.count ? BC.t("（{n} 条没匹配到 Canvas 课程，仍会显示）", { n: r.count - r.matched }) : ""));
         BC.bus.refreshBlocks();
       } catch (e) {
-        status && status("导入失败：" + (e.message || e));
+        status && status(BC.t("导入失败：") + (e.message || e));
       }
     });
     inp.click();

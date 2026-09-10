@@ -1,0 +1,35 @@
+
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; background: #cc0033; color: #fff; overflow: hidden; }
+  .bg { position: absolute; inset: 0; background:
+    radial-gradient(circle at 85% 20%, rgba(255,255,255,.14), transparent 40%),
+    radial-gradient(circle at 10% 90%, rgba(0,0,0,.18), transparent 45%),
+    linear-gradient(135deg, #d4143f 0%, #b8002d 100%); }
+  .dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.10) 1.2px, transparent 1.2px); background-size: 22px 22px; }
+  .wrap { position: relative; height: 100vh; display: flex; align-items: center; }
+  .icon { border-radius: 22%; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+  h1 { margin: 0; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+  .tag { margin: 0; opacity: .92; font-weight: 500; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 5px 12px; font-size: 15px; font-weight: 600; backdrop-filter: blur(4px); }
+  .potato { position: absolute; right: -40px; bottom: -60px; width: 260px; height: 200px; border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%; background: rgba(255, 205, 117, .16); transform: rotate(-18deg); }
+</style>
+<style>
+  .wrap { padding: 0 22px; gap: 18px; }
+  .icon { width: 96px; height: 96px; }
+  h1 { font-size: 36px; }
+  .tag { font-size: 15px; margin-top: 6px; }
+  .chip { font-size: 11px; padding: 3px 8px; }
+  .chips { margin-top: 10px; gap: 5px; max-width: 290px; }
+</style>
+<div class="bg"></div><div class="dots"></div><div class="potato"></div>
+<div class="wrap">
+  <img class="icon" src="data:image/png;base64,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">
+  <div>
+    <h1>PotatoCanvas</h1>
+    <p class="tag">A heartier Canvas dashboard.</p>
+    <div class="chips"><span class="chip">Grades on cards</span><span class="chip">Exam countdown</span><span class="chip">Themes</span></div>
+  </div>
+</div>

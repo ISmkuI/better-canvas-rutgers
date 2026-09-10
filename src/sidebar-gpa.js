@@ -8,13 +8,35 @@
  * 所以这里只用三档。三档实测：最差相邻对 #fab219↔#0ca30c，CVD ΔE 11.3 / 普通视觉 27.6，通过。
  * #fab219 对白底对比度 1.83（<3:1），因此每一行都必须带可见文字标签（分数 + 差距 + 状态词），
  * 状态永远不靠颜色单独承载。 */
+BC.i18n.add({
+  "达标": "On track",
+  "注意": "Watch",
+  "偏低": "Low",
+  "课程 {id}": "Course {id}",
+  "{n} 学分": "{n} credits",
+  "🔢 课程 Section": "🔢 Course sections",
+  "课名里没有 Rutgers 课号": "No Rutgers course number in the course names",
+  "section = 课号第四段": "section = 4th segment of the course number",
+  "；index 来自 WebReg 课表": "; index from the WebReg schedule",
+  "；导入 WebReg 课表后还会显示 index 号": "; import the WebReg schedule to also see index numbers",
+  "还没有已评分的课程": "No graded courses yet",
+  "还差 <b>{x}%</b> 到 {g}": "<b>{x}%</b> more to reach {g}",
+  "已在最高档": "Already in the top band",
+  "{name}：当前 {s}%": "{name}: currently {s}%",
+  "距 {g} 线 {x}%": "{x}% below the {g} cutoff",
+  "另有 {n} 门未列出": "{n} more not shown",
+  "竖线 = 下一档分数线": "Tick = next grade cutoff",
+  "🎯 GPA 与各科差距": "🎯 GPA & gaps by course",
+  "{n} 门在读 · 分数线因课而异，仅供参考": "{n} active courses · cutoffs vary by course, for reference only"
+});
+
 BC.sidebarGpa = {
   ID: "bc-sb-gpa",
 
   // Rutgers 分数线（与 BC.blocks.pctToGpa 的档位一致）
   BOUNDS: [[60, "D"], [70, "C"], [75, "C+"], [80, "B"], [85, "B+"], [90, "A"]],
 
-  STATUS: {
+  STATUS: {   // label 是中文键，渲染时过 BC.t
     good:     { label: "达标", fill: "#0ca30c", track: "#d6f0d6" },
     warning:  { label: "注意", fill: "#fab219", track: "#fdeccb" },
     critical: { label: "偏低", fill: "#d03b3b", track: "#f6d8d8" }
@@ -43,6 +65,20 @@ BC.sidebarGpa = {
   },
   fmtSection(sec) { return /^\d+$/.test(sec) ? String(+sec) : sec; },   // "02" -> "2"
 
+  // 某门课的 section（卡片旁边的小框也用）：WebReg 导入的条目优先（还带 index），否则从 Canvas 课名 / 课程代码识别
+  sectionFor(cid, s, settings) {
+    const S = BC.sidebarGpa;
+    const text = `${(s && s.name) || ""} ${(s && s.code) || ""}`;
+    const no = S.courseNo(text);
+    let wr = null;
+    for (const it of (settings && settings.schedule) || []) {
+      if (!it || it.source !== "webreg" || !it.code) continue;
+      if (String(it.cid) === String(cid) || (no && S.courseNo(it.code) === no)) { wr = it; break; }
+    }
+    const sec = (wr && wr.section) || S.sectionOf(wr ? wr.code : "") || S.sectionOf(text);
+    return { sec, index: wr ? (wr.index || "") : "", credits: wr ? (wr.credits || "") : "", no };
+  },
+
   async _renderSection(settings, side, old) {
     const S = BC.sidebarGpa;
     const esc = BC.util.esc;
@@ -65,7 +101,7 @@ BC.sidebarGpa = {
       const sec = (wr && wr.section) || S.sectionOf(wr ? wr.code : "") || S.sectionOf(text);
       return {
         cid, no, sec, index: wr ? wr.index : "", credits: wr ? wr.credits : "",
-        name: BC.util.courseTitle(s.name || s.code || ("课程 " + cid))
+        name: BC.util.courseTitle(s.name || s.code || BC.t("课程 {id}", { id: cid }))
       };
     }).filter(r => r.no || r.sec).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -76,13 +112,13 @@ BC.sidebarGpa = {
         <span class="bc-sec-badge${r.sec ? "" : " bc-sec-none"}">${r.sec ? "Sec " + esc(S.fmtSection(r.sec)) : "—"}</span>
         <div class="bc-sec-body">
           <a class="bc-sec-name" href="/courses/${esc(r.cid)}">${esc(r.name)}</a>
-          <div class="bc-sec-sub">${esc(r.no)}${r.sec ? ":" + esc(r.sec) : ""}${r.index ? ` · index ${esc(r.index)}` : ""}${r.credits ? ` · ${esc(r.credits)} 学分` : ""}</div>
+          <div class="bc-sec-sub">${esc(r.no)}${r.sec ? ":" + esc(r.sec) : ""}${r.index ? ` · index ${esc(r.index)}` : ""}${r.credits ? ` · ${BC.t("{n} 学分", { n: esc(r.credits) })}` : ""}</div>
         </div>
       </li>`).join("");
     card.innerHTML =
-      `<div class="bc-block-title">🔢 课程 Section</div>
-       ${rows.length ? `<ul class="bc-sec-list">${items}</ul>` : `<div class="bc-sbg-empty">课名里没有 Rutgers 课号</div>`}
-       <div class="bc-sbg-foot">section = 课号第四段${Object.keys(byCid).length || Object.keys(byNo).length ? "；index 来自 WebReg 课表" : "；导入 WebReg 课表后还会显示 index 号"}</div>`;
+      `<div class="bc-block-title">${BC.t("🔢 课程 Section")}</div>
+       ${rows.length ? `<ul class="bc-sec-list">${items}</ul>` : `<div class="bc-sbg-empty">${BC.t("课名里没有 Rutgers 课号")}</div>`}
+       <div class="bc-sbg-foot">${BC.t("section = 课号第四段")}${Object.keys(byCid).length || Object.keys(byNo).length ? BC.t("；index 来自 WebReg 课表") : BC.t("；导入 WebReg 课表后还会显示 index 号")}</div>`;
 
     const anchor = side.querySelector('a[href="/grades"]') || side.querySelector('a[href$="/grades"]');
     if (old) old.remove();
@@ -90,17 +126,48 @@ BC.sidebarGpa = {
     else side.appendChild(card);
   },
 
+  // 骨架卡：插在 View Grades 上方，和正式卡同一位置同一 id，正式卡画好后把它 remove 掉
+  _skeleton(side) {
+    const S = BC.sidebarGpa;
+    const card = document.createElement("div");
+    card.className = "bc-block bc-sbg bc-sbg-skel";
+    card.id = S.ID;
+    card.setAttribute("aria-busy", "true");
+    card.innerHTML =
+      `<div class="bc-skel" aria-hidden="true">
+         <div class="bc-skel-line w60"></div>
+         <div class="bc-skel-line w90"></div>
+         <div class="bc-skel-line w75"></div>
+         <div class="bc-skel-line w90"></div>
+       </div>`;
+    const anchor = side.querySelector('a[href="/grades"]') || side.querySelector('a[href$="/grades"]');
+    if (anchor) anchor.parentNode.insertBefore(card, anchor);
+    else side.appendChild(card);
+    return card;
+  },
+
   async render(settings) {
     const S = BC.sidebarGpa;
-    const old = document.getElementById(S.ID);
+    let old = document.getElementById(S.ID);
     if (!settings.sidebar.gpaChart || !BC.dash.onDashboard()) { old?.remove(); return; }
 
     const side = await BC.util.waitFor("#right-side");
     if (!side) return;
 
-    // 默认显示「课程 Section」；设置里可切回「GPA 与各科差距」
-    if ((settings.sidebar.rightCard || "section") === "section") return S._renderSection(settings, side, old);
+    // 首次渲染先放一张骨架卡占位（刷新时保留旧卡，数据回来直接替换，避免闪一下骨架）
+    old = old || S._skeleton(side);
+    try {
+      // 默认显示「课程 Section」；设置里可切回「GPA 与各科差距」
+      if ((settings.sidebar.rightCard || "section") === "section") return await S._renderSection(settings, side, old);
+      return await S._renderGpa(settings, side, old);
+    } catch (e) {
+      if (old.classList.contains("bc-sbg-skel")) old.remove();   // 出错别把骨架卡留在页面上
+      throw e;
+    }
+  },
 
+  async _renderGpa(settings, side, old) {
+    const S = BC.sidebarGpa;
     const scores = await BC.grades.fetchScores();
     const rows = Object.entries(scores)
       .filter(([, s]) => s.score != null && BC.groups.countsForGpa(s)) // “其他课程”不计入
@@ -116,18 +183,18 @@ BC.sidebarGpa = {
 
     let body;
     if (!rows.length) {
-      body = `<div class="bc-sbg-empty">还没有已评分的课程</div>`;
+      body = `<div class="bc-sbg-empty">${BC.t("还没有已评分的课程")}</div>`;
     } else {
       const items = rows.slice(0, 8).map(r => {
         const st = S.STATUS[S.band(r.score)];
         const nb = S.nextBound(r.score);
-        const name = BC.util.courseTitle(r.name || r.code || ("课程 " + r.cid));
+        const name = BC.util.courseTitle(r.name || r.code || BC.t("课程 {id}", { id: r.cid }));
         const gap = nb
-          ? `还差 <b>${(nb.v - r.score).toFixed(1)}%</b> 到 ${nb.l}`
-          : "已在最高档";
-        const tip = `${r.name || name}：当前 ${r.score}%` +
-                    (r.grade ? `（${r.grade}）` : "") +
-                    (nb ? ` · 距 ${nb.l} 线 ${(nb.v - r.score).toFixed(1)}%` : " · 已在最高档");
+          ? BC.t("还差 <b>{x}%</b> 到 {g}", { x: (nb.v - r.score).toFixed(1), g: nb.l })
+          : BC.t("已在最高档");
+        const tip = BC.t("{name}：当前 {s}%", { name: r.name || name, s: r.score }) +
+                    (r.grade ? BC.i18n.pick(`（${r.grade}）`, ` (${r.grade})`) : "") +
+                    " · " + (nb ? BC.t("距 {g} 线 {x}%", { g: nb.l, x: (nb.v - r.score).toFixed(1) }) : BC.t("已在最高档"));
         // tick 位置直接用分数线的百分比——坐标轴就是 0–100，没有缩放
         const tick = nb
           ? `<span class="bc-sbg-tick" style="left:${nb.v}%"></span>`
@@ -141,19 +208,19 @@ BC.sidebarGpa = {
             <span class="bc-sbg-fill" style="width:${Math.max(0, Math.min(100, r.score))}%;background:${st.fill}"></span>
             ${tick}
           </div>
-          <div class="bc-sbg-gap"><span class="bc-sbg-tag">${st.label}</span> · ${gap}</div>
+          <div class="bc-sbg-gap"><span class="bc-sbg-tag">${BC.t(st.label)}</span> · ${gap}</div>
         </li>`;
       }).join("");
-      const more = rows.length > 8 ? `<div class="bc-sbg-foot">另有 ${rows.length - 8} 门未列出</div>` : "";
+      const more = rows.length > 8 ? `<div class="bc-sbg-foot">${BC.t("另有 {n} 门未列出", { n: rows.length - 8 })}</div>` : "";
       body =
         `<ul class="bc-sbg-list">${items}</ul>${more}
-         <div class="bc-sbg-foot">竖线 = 下一档分数线</div>`;
+         <div class="bc-sbg-foot">${BC.t("竖线 = 下一档分数线")}</div>`;
     }
 
     card.innerHTML =
-      `<div class="bc-block-title">🎯 GPA 与各科差距</div>
+      `<div class="bc-block-title">${BC.t("🎯 GPA 与各科差距")}</div>
        <div class="bc-sbg-num">${avg != null ? avg.toFixed(2) : "—"}</div>
-       <div class="bc-sbg-sub">${gpas.length} 门在读 · 分数线因课而异，仅供参考</div>
+       <div class="bc-sbg-sub">${BC.t("{n} 门在读 · 分数线因课而异，仅供参考", { n: gpas.length })}</div>
        ${body}`;
 
     // 插到 View Grades 按钮上方；先精确匹配，避免命中 To Do 里指向某门课成绩页的链接
